@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>JX Outreach Tracker</title>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 <style>
 :root {
   --bg:#0f0f13;--surface:#1a1a24;--surface-2:#22222f;--surface-3:#2a2a3a;
@@ -215,16 +218,55 @@ mark{background:rgba(245,158,11,.25);color:inherit;border-radius:2px;padding:0 1
 .trend-up{color:var(--success)}
 .trend-down{color:var(--danger)}
 
+/* ── Login screen ── */
+#login-screen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:1000;padding:var(--space-4)}
+.login-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:var(--space-8) var(--space-6);text-align:center;max-width:360px;width:100%}
+.login-title{font-size:var(--font-2xl);font-weight:800;background:linear-gradient(135deg,var(--accent-light),#c084fc);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:var(--space-2)}
+.login-subtitle{color:var(--text-muted);font-size:var(--font-sm);margin-bottom:var(--space-8);line-height:1.5}
+.btn-google{display:inline-flex;align-items:center;justify-content:center;gap:var(--space-3);width:100%;min-height:52px;background:var(--accent);color:white;border:none;border-radius:var(--radius-lg);font-size:var(--font-base);font-weight:600;font-family:inherit;cursor:pointer;transition:background var(--dur-fast);box-shadow:0 2px 12px rgba(124,92,191,.3)}
+.btn-google:hover{background:var(--accent-light)}
+
+/* ── Loading state ── */
+#loading-state{position:fixed;top:var(--topbar-h);left:0;right:0;bottom:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:var(--space-4);z-index:80}
+.spinner{width:36px;height:36px;border:3px solid rgba(124,92,191,.2);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+#loading-state p{font-size:var(--font-sm);color:var(--text-muted)}
+
+/* ── Offline banner ── */
+#offline-banner{background:rgba(245,158,11,.1);border-bottom:1px solid rgba(245,158,11,.25);color:var(--warning);font-size:var(--font-sm);font-weight:600;text-align:center;padding:8px var(--space-4)}
+
+/* ── User info in top bar ── */
+#user-info{align-items:center;gap:6px}
+#user-avatar{width:28px;height:28px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1.5px solid var(--border)}
+#user-name{font-size:var(--font-xs);color:var(--text-muted);max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:none}
+.signout-btn{font-size:var(--font-xs);color:var(--text-muted);background:none;border:none;cursor:pointer;padding:0;text-decoration:underline;white-space:nowrap}
+.signout-btn:hover{color:var(--text)}
+
+@media(min-width:480px){#user-name{display:inline}}
 @media(min-width:768px){
   #sidebar{display:flex}
   #main{padding-left:var(--sidebar-w);padding-bottom:var(--space-8)}
   #bottom-nav{display:none}
   .stats-grid{grid-template-columns:repeat(3,1fr)}
+  #loading-state{left:var(--sidebar-w)}
 }
 </style>
 </head>
 <body>
-<div id="app">
+
+<!-- Login screen -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-title">JX Outreach Tracker</div>
+    <div class="login-subtitle">Sign in to sync your data across devices</div>
+    <button class="btn-google" onclick="signInWithGoogle()">
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z" fill="#fff" fill-opacity=".9"/><path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z" fill="#fff" fill-opacity=".7"/><path d="M3.964 10.71A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#fff" fill-opacity=".5"/><path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z" fill="#fff" fill-opacity=".8"/></svg>
+      Sign in with Google
+    </button>
+  </div>
+</div>
+
+<div id="app" class="hidden">
   <nav id="sidebar">
     <div class="sidebar-logo">
       <h1>JX Tracker</h1>
@@ -240,9 +282,25 @@ mark{background:rgba(245,158,11,.25);color:inherit;border-radius:2px;padding:0 1
   </nav>
 
   <div id="main">
+    <!-- Offline banner -->
+    <div id="offline-banner" class="hidden">You're offline — changes will sync when you reconnect.</div>
+
     <div class="top-bar">
       <span class="top-bar-title" id="page-title">Today</span>
-      <span class="dm-pill gray" id="dm-pill">Today: 0 / 20 DMs</span>
+      <div style="display:flex;align-items:center;gap:var(--space-3)">
+        <span class="dm-pill gray" id="dm-pill">Today: 0 / 20 DMs</span>
+        <div id="user-info" style="display:none">
+          <img id="user-avatar" src="" alt="avatar" onerror="this.style.display='none'">
+          <span id="user-name"></span>
+          <button class="signout-btn" onclick="handleSignOut()">Sign out</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading state -->
+    <div id="loading-state" class="hidden">
+      <div class="spinner"></div>
+      <p id="loading-text">Loading your prospects...</p>
     </div>
 
     <!-- TODAY -->
@@ -416,7 +474,7 @@ mark{background:rgba(245,158,11,.25);color:inherit;border-radius:2px;padding:0 1
         </div>
       </div>
       <div class="card">
-        <p style="font-size:var(--font-sm);color:var(--text-muted)">JX Outreach Tracker v2.0<br>All data stored locally in your browser · No backend · No account needed</p>
+        <p style="font-size:var(--font-sm);color:var(--text-muted)">JX Outreach Tracker v2.0<br>Data synced via Firebase · Signed in with Google</p>
       </div>
     </div>
   </div>
@@ -507,9 +565,33 @@ mark{background:rgba(245,158,11,.25);color:inherit;border-radius:2px;padding:0 1
 
 <script>
 // ============================================================
+// FIREBASE CONFIG & INIT
+// ============================================================
+const firebaseConfig = {
+  apiKey: "AIzaSyBNas_ZyPl2UwwKD_tCEKaZ-51y7rfBe7k",
+  authDomain: "jx-outreach-tracker.firebaseapp.com",
+  projectId: "jx-outreach-tracker",
+  storageBucket: "jx-outreach-tracker.firebasestorage.app",
+  messagingSenderId: "777430100726",
+  appId: "1:777430100726:web:6dcce219b722edb8559ad7"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+// Enable offline persistence (best-effort)
+db.enablePersistence({ synchronizeTabs: true })
+  .catch(err => {
+    if (err.code !== 'failed-precondition' && err.code !== 'unimplemented') {
+      console.warn('Firestore persistence error:', err);
+    }
+  });
+
+// ============================================================
 // CONSTANTS
 // ============================================================
-const STORAGE_KEY = 'jx_prospects';
+const STORAGE_KEY = 'jx_prospects'; // kept only for migration check
 const SETTINGS_KEY = 'jx_settings';
 
 const STAGES = [
@@ -559,12 +641,153 @@ const US_STATES = ['Alabama','Alaska','Arizona','Arkansas','California','Colorad
   'Oregon','Pennsylvania','Rhode Island','South Carolina','South Dakota','Tennessee',
   'Texas','Utah','Vermont','Virginia','Washington','West Virginia','Wisconsin','Wyoming'];
 
+// ============================================================
+// STATE
+// ============================================================
+let prospectsCache = [];
 let currentDetailId = null;
 let selectMode = false;
 let selectedIds = new Set();
+let unsubscribeSnapshot = null;
+let appInitialized = false;
 
 // ============================================================
-// SETTINGS
+// AUTH
+// ============================================================
+function signInWithGoogle() {
+  const provider = new firebase.auth.GoogleAuthProvider();
+  auth.signInWithPopup(provider).catch(err => {
+    console.error('Sign-in failed:', err);
+    alert('Sign in failed: ' + err.message);
+  });
+}
+
+function handleSignOut() {
+  if (!confirm('Sign out of JX Outreach Tracker?')) return;
+  if (unsubscribeSnapshot) { unsubscribeSnapshot(); unsubscribeSnapshot = null; }
+  prospectsCache = [];
+  appInitialized = false;
+  auth.signOut();
+}
+
+auth.onAuthStateChanged(async user => {
+  if (user) {
+    // Show app shell, hide login
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').classList.remove('hidden');
+
+    // Populate user info in top bar
+    const avatarEl = document.getElementById('user-avatar');
+    if (user.photoURL) { avatarEl.src = user.photoURL; avatarEl.style.display = ''; }
+    else { avatarEl.style.display = 'none'; }
+    document.getElementById('user-name').textContent = user.displayName || user.email || '';
+    const userInfoEl = document.getElementById('user-info');
+    userInfoEl.style.display = 'flex';
+
+    // Show loading spinner
+    document.getElementById('loading-state').classList.remove('hidden');
+
+    // Migrate any existing localStorage data first
+    await migrateFromLocalStorage(user.uid);
+
+    // Set up real-time listener
+    setupFirestoreListener(user.uid);
+  } else {
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('app').classList.add('hidden');
+    document.getElementById('loading-state').classList.add('hidden');
+    if (unsubscribeSnapshot) { unsubscribeSnapshot(); unsubscribeSnapshot = null; }
+    prospectsCache = [];
+    appInitialized = false;
+  }
+});
+
+// ============================================================
+// MIGRATION FROM LOCALSTORAGE
+// ============================================================
+async function migrateFromLocalStorage(userId) {
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if (!raw) return;
+  let ps;
+  try { ps = JSON.parse(raw); } catch { localStorage.removeItem(STORAGE_KEY); return; }
+  if (!Array.isArray(ps) || ps.length === 0) { localStorage.removeItem(STORAGE_KEY); return; }
+
+  // Only migrate if the user has no data in Firestore yet (avoid duplicates on re-login)
+  try {
+    const existing = await db.collection('prospects').where('userId', '==', userId).limit(1).get();
+    if (!existing.empty) {
+      localStorage.removeItem(STORAGE_KEY);
+      return;
+    }
+  } catch (e) { return; }
+
+  document.getElementById('loading-text').textContent = 'Migrating your existing data...';
+
+  // Batch write in chunks of 499
+  const chunks = [];
+  for (let i = 0; i < ps.length; i += 499) chunks.push(ps.slice(i, i + 499));
+  for (const chunk of chunks) {
+    const batch = db.batch();
+    chunk.forEach(p => {
+      const pp = { ...p, userId };
+      batch.set(db.collection('prospects').doc(pp.id), pp);
+    });
+    await batch.commit();
+  }
+
+  localStorage.removeItem(STORAGE_KEY);
+  document.getElementById('loading-text').textContent = 'Loading your prospects...';
+}
+
+// ============================================================
+// FIRESTORE REAL-TIME LISTENER
+// ============================================================
+function setupFirestoreListener(userId) {
+  if (unsubscribeSnapshot) unsubscribeSnapshot();
+  let firstLoad = true;
+
+  unsubscribeSnapshot = db.collection('prospects')
+    .where('userId', '==', userId)
+    .onSnapshot(snapshot => {
+      prospectsCache = snapshot.docs.map(doc => doc.data());
+
+      if (firstLoad) {
+        firstLoad = false;
+        document.getElementById('loading-state').classList.add('hidden');
+        if (!appInitialized) {
+          appInitialized = true;
+          initApp();
+        } else {
+          refreshCurrentView();
+        }
+      } else {
+        refreshCurrentView();
+      }
+    }, err => {
+      console.error('Firestore snapshot error:', err);
+      document.getElementById('loading-state').classList.add('hidden');
+    });
+}
+
+function refreshCurrentView() {
+  updateDmPill();
+  const ap = document.querySelector('.page.active');
+  if (!ap) return;
+  const page = ap.id.replace('page-', '');
+  if (page === 'today') renderToday();
+  else if (page === 'prospects') renderProspects();
+  else if (page === 'analytics') renderAnalytics();
+  if (currentDetailId) renderDetail(currentDetailId);
+}
+
+// ============================================================
+// ONLINE / OFFLINE BANNER
+// ============================================================
+window.addEventListener('online', () => document.getElementById('offline-banner').classList.add('hidden'));
+window.addEventListener('offline', () => document.getElementById('offline-banner').classList.remove('hidden'));
+
+// ============================================================
+// SETTINGS  (still localStorage — no change needed)
 // ============================================================
 function getSettings() {
   try { return Object.assign({dailyTarget:20,followUpHours:48}, JSON.parse(localStorage.getItem(SETTINGS_KEY)||'{}')); }
@@ -579,10 +802,10 @@ function saveSettingsFields() {
 }
 
 // ============================================================
-// STORAGE & MIGRATION
+// DATA LAYER — reads from in-memory cache, writes to Firestore
 // ============================================================
-function getRaw() { try { return JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]'); } catch { return []; } }
-function saveAll(ps) { localStorage.setItem(STORAGE_KEY, JSON.stringify(ps)); }
+function getRaw() { return prospectsCache; }
+function getAll() { return prospectsCache.map(migrate); }
 function uid() { return Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
 
 function migrate(p) {
@@ -597,7 +820,6 @@ function migrate(p) {
   if (!p.nextActionDate) p.nextActionDate = '';
   if (p.projectValue === undefined) p.projectValue = 800;
   if (!p.sourceHashtag) p.sourceHashtag = '';
-  // Remap old stage names
   if (OLD_STAGE_MAP[p.currentStage]) p.currentStage = OLD_STAGE_MAP[p.currentStage];
   if (p.stageHistory) {
     p.stageHistory = p.stageHistory.map(s => ({
@@ -607,14 +829,13 @@ function migrate(p) {
   return p;
 }
 
-function getAll() { return getRaw().map(migrate); }
-
 function addProspect(d) {
-  const ps = getRaw();
+  if (!auth.currentUser) return null;
   const now = new Date().toISOString();
   const stage = d.stage || 'Researched';
   const p = {
     id: uid(),
+    userId: auth.currentUser.uid,
     handle: (d.handle.startsWith('@') ? d.handle : '@'+d.handle).toLowerCase(),
     industry: d.industry,
     initialMessage: d.messageType || 'compliment',
@@ -640,47 +861,60 @@ function addProspect(d) {
   if (d.initialNote) {
     p.conversationLog.push({ id:uid(), timestamp:now, type:'other', text:d.initialNote, link:'' });
   }
-  ps.push(p);
-  saveAll(ps);
+  // Optimistic local update
+  prospectsCache.push(p);
+  // Write to Firestore
+  db.collection('prospects').doc(p.id).set(p).catch(err => console.error('addProspect:', err));
   return p;
 }
 
 function updateStage(id, stage, note) {
-  const ps = getAll();
-  const i = ps.findIndex(p => p.id === id);
+  const i = prospectsCache.findIndex(p => p.id === id);
   if (i < 0) return null;
   const now = new Date().toISOString();
-  ps[i].currentStage = stage;
-  ps[i].stageHistory.push({ stage, timestamp:now, note:note||'' });
-  ps[i].lastActionDate = now;
-  ps[i].updatedAt = now;
-  ps[i].conversationLog.push({
-    id: uid(), timestamp: now, type: 'stage-change',
-    text: 'Stage → '+stage+(note?' · '+note:''), link: ''
-  });
-  saveAll(ps);
-  return ps[i];
+  const updated = {
+    ...prospectsCache[i],
+    currentStage: stage,
+    stageHistory: [...(prospectsCache[i].stageHistory||[]), { stage, timestamp:now, note:note||'' }],
+    lastActionDate: now,
+    updatedAt: now,
+    conversationLog: [...(prospectsCache[i].conversationLog||[]), {
+      id:uid(), timestamp:now, type:'stage-change',
+      text:'Stage → '+stage+(note?' · '+note:''), link:''
+    }]
+  };
+  prospectsCache[i] = updated;
+  db.collection('prospects').doc(id).set(updated).catch(err => console.error('updateStage:', err));
+  return updated;
 }
 
 function addLogEntry(id, entry) {
-  const ps = getAll();
-  const i = ps.findIndex(p => p.id === id);
+  const i = prospectsCache.findIndex(p => p.id === id);
   if (i < 0) return;
-  ps[i].conversationLog.push({ id:uid(), timestamp:new Date().toISOString(), ...entry });
-  ps[i].updatedAt = new Date().toISOString();
-  saveAll(ps);
+  const now = new Date().toISOString();
+  const newEntry = { id:uid(), timestamp:now, ...entry };
+  const updated = {
+    ...prospectsCache[i],
+    conversationLog: [...(prospectsCache[i].conversationLog||[]), newEntry],
+    updatedAt: now
+  };
+  prospectsCache[i] = updated;
+  db.collection('prospects').doc(id).set(updated).catch(err => console.error('addLogEntry:', err));
 }
 
 function updateFields(id, fields) {
-  const ps = getAll();
-  const i = ps.findIndex(p => p.id === id);
+  const i = prospectsCache.findIndex(p => p.id === id);
   if (i < 0) return;
-  Object.assign(ps[i], fields, { updatedAt: new Date().toISOString() });
-  saveAll(ps);
-  return ps[i];
+  const updated = { ...prospectsCache[i], ...fields, updatedAt: new Date().toISOString() };
+  prospectsCache[i] = updated;
+  db.collection('prospects').doc(id).set(updated).catch(err => console.error('updateFields:', err));
+  return updated;
 }
 
-function deleteProspect(id) { saveAll(getRaw().filter(p => p.id !== id)); }
+function deleteProspect(id) {
+  prospectsCache = prospectsCache.filter(p => p.id !== id);
+  db.collection('prospects').doc(id).delete().catch(err => console.error('deleteProspect:', err));
+}
 
 // ============================================================
 // DATE HELPERS
@@ -1280,11 +1514,9 @@ function renderAnalytics() {
   }
   const tw = wkM(twPs), lw = wkM(lwPs);
 
-  // Pipeline value
   const pipelineValue = ps.filter(p => !['Closed Lost','Ghosted'].includes(p.currentStage))
     .reduce((s,p) => s + (p.projectValue || 0), 0);
 
-  // Avg days to close
   const closeTimes = ps.filter(isClosed).map(p => {
     const dm = p.stageHistory.find(s => s.stage === 'DM Sent');
     const cw = p.stageHistory.find(s => s.stage === 'Closed Won');
@@ -1299,7 +1531,6 @@ function renderAnalytics() {
     return '<span style="color:var(--text-muted)">→</span>';
   }
 
-  // Hashtag map
   const hashMap = {};
   ps.forEach(p => {
     const h = '#'+(p.sourceHashtag||'none');
@@ -1313,7 +1544,6 @@ function renderAnalytics() {
     .map(([h,d]) => ({h, d, rr: d.n ? ((d.r/d.n)*100).toFixed(1):'0.0'}))
     .sort((a,b) => parseFloat(b.rr) - parseFloat(a.rr));
 
-  // Industry map
   const indMap = {};
   ps.forEach(p => {
     if (!indMap[p.industry]) indMap[p.industry] = {n:0,r:0,m:0,c:0};
@@ -1323,7 +1553,6 @@ function renderAnalytics() {
     if (isClosed(p)) indMap[p.industry].c++;
   });
 
-  // Follower ranges
   const fRanges = [
     {label:'Under 1k', min:0, max:999},
     {label:'1k – 5k', min:1000, max:4999},
@@ -1338,7 +1567,6 @@ function renderAnalytics() {
     };
   });
 
-  // Day of week
   const dowDms = Array(7).fill(0), dowRep = Array(7).fill(0);
   ps.forEach(p => {
     const dm = p.stageHistory.find(s => s.stage === 'DM Sent');
@@ -1351,7 +1579,6 @@ function renderAnalytics() {
   const maxDow = Math.max(...dowDms, 1);
   const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 
-  // Stage ages
   const stageAges = {};
   ps.forEach(p => {
     for (let i = 0; i < p.stageHistory.length; i++) {
@@ -1363,7 +1590,6 @@ function renderAnalytics() {
     }
   });
 
-  // Funnel
   const sCounts = {};
   STAGES.forEach(s => sCounts[s] = 0);
   ps.forEach(p => { if (sCounts[p.currentStage] !== undefined) sCounts[p.currentStage]++; });
@@ -1567,13 +1793,35 @@ function importJSON(e) {
   const file = e.target.files[0];
   if (!file) return;
   const reader = new FileReader();
-  reader.onload = ev => {
+  reader.onload = async ev => {
     try {
       const data = JSON.parse(ev.target.result);
       const ps = data.prospects || (Array.isArray(data) ? data : null);
       if (!ps) throw new Error('Invalid format — expected { prospects: [...] }');
       if (!confirm(`Import ${ps.length} prospects? This replaces ALL current data.`)) return;
-      saveAll(ps);
+
+      const userId = auth.currentUser.uid;
+
+      // Delete all existing docs
+      const snap = await db.collection('prospects').where('userId', '==', userId).get();
+      if (!snap.empty) {
+        const delBatch = db.batch();
+        snap.docs.forEach(doc => delBatch.delete(doc.ref));
+        await delBatch.commit();
+      }
+
+      // Write new docs in chunks of 499
+      const chunks = [];
+      for (let i = 0; i < ps.length; i += 499) chunks.push(ps.slice(i, i + 499));
+      for (const chunk of chunks) {
+        const batch = db.batch();
+        chunk.forEach(p => {
+          const pp = { ...p, userId };
+          batch.set(db.collection('prospects').doc(pp.id), pp);
+        });
+        await batch.commit();
+      }
+
       if (data.settings) localStorage.setItem(SETTINGS_KEY, JSON.stringify(data.settings));
       alert('Import successful!');
       renderSettingsPage();
@@ -1584,10 +1832,19 @@ function importJSON(e) {
   e.target.value = '';
 }
 
-function clearAllData() {
+async function clearAllData() {
   if (!confirm('Delete ALL prospects and data? This cannot be undone.')) return;
   if (!confirm('Last chance — permanently delete everything?')) return;
-  localStorage.removeItem(STORAGE_KEY);
+
+  const userId = auth.currentUser.uid;
+  const snap = await db.collection('prospects').where('userId', '==', userId).get();
+  if (!snap.empty) {
+    const batch = db.batch();
+    snap.docs.forEach(doc => batch.delete(doc.ref));
+    await batch.commit();
+  }
+
+  prospectsCache = [];
   updateDmPill();
   navigateTo('today');
   alert('All data cleared.');
@@ -1602,9 +1859,9 @@ function dlFile(content, filename, type) {
 }
 
 // ============================================================
-// INIT
+// INIT (called once after first Firestore snapshot arrives)
 // ============================================================
-function init() {
+function initApp() {
   // Stage dropdowns
   ['f-stage','qm-stage','bulk-stage'].forEach(id => {
     const el = document.getElementById(id);
@@ -1628,8 +1885,6 @@ function init() {
   updateDmPill();
   renderToday();
 }
-
-init();
 </script>
 </body>
 </html>
