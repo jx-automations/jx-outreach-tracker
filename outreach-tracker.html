@@ -1,0 +1,1635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>JX Outreach Tracker</title>
+<style>
+:root {
+  --bg:#0f0f13;--surface:#1a1a24;--surface-2:#22222f;--surface-3:#2a2a3a;
+  --accent:#7c5cbf;--accent-light:#9b7de0;--accent-dark:#5a3d99;
+  --success:#22c55e;--warning:#f59e0b;--danger:#ef4444;--info:#3b82f6;
+  --text:#f0f0f7;--text-muted:#8888a8;--text-dim:#454560;--border:#2a2a3a;
+  --space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;--space-5:20px;
+  --space-6:24px;--space-8:32px;--space-10:40px;
+  --radius-sm:6px;--radius-md:10px;--radius-lg:16px;--radius-full:9999px;
+  --font-xs:.75rem;--font-sm:.8125rem;--font-base:1rem;--font-lg:1.125rem;
+  --font-xl:1.25rem;--font-2xl:1.5rem;--font-3xl:2rem;
+  --dur-fast:150ms;--dur-base:250ms;
+  --nav-h:64px;--sidebar-w:240px;--topbar-h:52px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{height:100%}
+body{min-height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--surface-3);border-radius:var(--radius-full)}
+
+#app{display:flex;min-height:100vh}
+#sidebar{display:none;width:var(--sidebar-w);background:var(--surface);border-right:1px solid var(--border);flex-direction:column;position:fixed;left:0;top:0;bottom:0;z-index:100;padding:var(--space-6) 0}
+.sidebar-logo{padding:0 var(--space-6) var(--space-5);border-bottom:1px solid var(--border);margin-bottom:var(--space-3)}
+.sidebar-logo h1{font-size:var(--font-xl);font-weight:800;background:linear-gradient(135deg,var(--accent-light),#c084fc);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.sidebar-logo p{font-size:var(--font-sm);color:var(--text-muted)}
+.sidebar-nav{flex:1;padding:0 var(--space-3)}
+.nav-item{display:flex;align-items:center;gap:var(--space-3);padding:var(--space-3) var(--space-4);border-radius:var(--radius-md);cursor:pointer;color:var(--text-muted);font-size:var(--font-base);font-weight:500;transition:all var(--dur-fast) ease;margin-bottom:3px;border:none;background:none;width:100%;text-align:left}
+.nav-item:hover{background:var(--surface-2);color:var(--text)}
+.nav-item.active{background:rgba(124,92,191,.18);color:var(--accent-light)}
+.nav-icon{font-size:1.2rem;flex-shrink:0}
+#main{flex:1;min-height:100vh;padding-bottom:calc(var(--nav-h) + 8px);overflow-x:hidden}
+
+.top-bar{position:sticky;top:0;z-index:50;background:var(--bg);border-bottom:1px solid var(--border);padding:0 var(--space-4);display:flex;align-items:center;justify-content:space-between;height:var(--topbar-h)}
+.top-bar-title{font-size:var(--font-lg);font-weight:700}
+.dm-pill{display:inline-flex;align-items:center;gap:5px;font-size:var(--font-sm);font-weight:700;padding:4px 12px;border-radius:var(--radius-full);white-space:nowrap;transition:all var(--dur-fast)}
+.dm-pill.gray{background:rgba(136,136,168,.13);border:1px solid rgba(136,136,168,.25);color:var(--text-muted)}
+.dm-pill.amber{background:rgba(245,158,11,.13);border:1px solid rgba(245,158,11,.3);color:var(--warning)}
+.dm-pill.green{background:rgba(34,197,94,.13);border:1px solid rgba(34,197,94,.3);color:var(--success)}
+
+#bottom-nav{position:fixed;bottom:0;left:0;right:0;height:var(--nav-h);background:var(--surface);border-top:1px solid var(--border);display:flex;z-index:100;padding-bottom:env(safe-area-inset-bottom)}
+.bnav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;color:var(--text-muted);font-size:.68rem;font-weight:600;transition:color var(--dur-fast) ease;border:none;background:none;min-height:44px}
+.bnav-item .nav-icon{font-size:1.3rem;line-height:1}
+.bnav-item.active{color:var(--accent-light)}
+
+.page{display:none;padding:var(--space-4);max-width:900px;margin:0 auto}
+.page.active{display:block}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:var(--space-5)}
+.mb-4{margin-bottom:var(--space-4)}
+
+.stage-badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:var(--radius-full);font-size:var(--font-xs);font-weight:700;white-space:nowrap;line-height:1.4}
+.s-researched{background:rgba(136,136,168,.15);color:#9090b0}
+.s-engaged{background:rgba(125,211,252,.13);color:#7dd3fc}
+.s-dm-sent{background:rgba(59,130,246,.15);color:#60a5fa}
+.s-seen-no-reply{background:rgba(245,158,11,.15);color:#fbbf24}
+.s-replied{background:rgba(167,139,250,.2);color:#a78bfa}
+.s-pitched{background:rgba(249,115,22,.15);color:#fb923c}
+.s-mockup-requested{background:rgba(236,72,153,.15);color:#f472b6}
+.s-mockup-sent{background:rgba(245,158,11,.2);color:#f59e0b}
+.s-negotiating{background:rgba(20,184,166,.15);color:#2dd4bf}
+.s-closed-won{background:rgba(34,197,94,.15);color:#22c55e}
+.s-closed-lost{background:rgba(239,68,68,.15);color:#f87171}
+.s-ghosted{background:rgba(75,85,99,.2);color:#9ca3af}
+.industry-pill{display:inline-flex;align-items:center;padding:2px 9px;border-radius:var(--radius-full);font-size:var(--font-xs);font-weight:600;background:rgba(124,92,191,.13);color:var(--accent-light);white-space:nowrap}
+
+.stats-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:var(--space-3);margin-bottom:var(--space-5)}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:var(--space-4)}
+.stat-label{font-size:var(--font-sm);color:var(--text-muted);font-weight:500;margin-bottom:var(--space-2);line-height:1.3}
+.stat-value{font-size:var(--font-2xl);font-weight:800;color:var(--text);line-height:1}
+.stat-value.c-accent{color:var(--accent-light)}
+.stat-value.c-success{color:var(--success)}
+.stat-value.c-warning{color:var(--warning)}
+.stat-value.c-sm{font-size:var(--font-lg)}
+.stat-sub{font-size:var(--font-xs);color:var(--text-muted);margin-top:3px}
+
+.form-group{margin-bottom:var(--space-4)}
+.form-label{display:block;font-size:var(--font-xs);font-weight:700;color:var(--text-muted);margin-bottom:var(--space-2);text-transform:uppercase;letter-spacing:.06em}
+.form-input,.form-select,.form-textarea{width:100%;background:var(--surface-2);border:1.5px solid var(--border);border-radius:var(--radius-md);color:var(--text);font-size:var(--font-base);font-family:inherit;padding:12px 14px;min-height:48px;outline:none;-webkit-appearance:none;appearance:none;transition:border-color var(--dur-fast),background var(--dur-fast)}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--accent);background:var(--surface-3)}
+.form-input::placeholder,.form-textarea::placeholder{color:var(--text-dim)}
+.form-select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238888a8' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:38px;cursor:pointer}
+.form-select option{background:var(--surface-2);color:var(--text)}
+.form-textarea{min-height:90px;resize:vertical;line-height:1.5}
+.input-prefix{position:relative}
+.input-prefix .prefix{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--text-muted);font-weight:700;pointer-events:none}
+.input-prefix .form-input{padding-left:26px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-3)}
+.form-hint{font-size:var(--font-xs);color:var(--text-muted);margin-top:4px}
+.toggle-group{display:flex;gap:var(--space-2)}
+.toggle-btn{flex:1;padding:10px;border:1.5px solid var(--border);border-radius:var(--radius-md);background:var(--surface-2);color:var(--text-muted);font-size:var(--font-sm);font-weight:600;cursor:pointer;transition:all var(--dur-fast);text-align:center}
+.toggle-btn.active{border-color:var(--accent);background:rgba(124,92,191,.15);color:var(--accent-light)}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:var(--space-2);min-height:48px;padding:12px 20px;border-radius:var(--radius-md);font-size:var(--font-base);font-weight:600;font-family:inherit;cursor:pointer;transition:all var(--dur-fast) ease;border:none}
+.btn-primary{background:var(--accent);color:white;width:100%;font-size:var(--font-lg);min-height:56px;border-radius:var(--radius-lg);box-shadow:0 2px 12px rgba(124,92,191,.3)}
+.btn-primary:hover{background:var(--accent-light);transform:translateY(-1px)}
+.btn-primary:active{transform:none}
+.btn-secondary{background:var(--surface-2);color:var(--text);border:1.5px solid var(--border)}
+.btn-secondary:hover{background:var(--surface-3);border-color:var(--accent);color:var(--accent-light)}
+.btn-danger{background:rgba(239,68,68,.1);color:#f87171;border:1.5px solid rgba(239,68,68,.3)}
+.btn-danger:hover{background:rgba(239,68,68,.2)}
+.btn-sm{min-height:36px;padding:7px 14px;font-size:var(--font-sm);border-radius:var(--radius-sm)}
+.btn-full{width:100%}
+.mt-4{margin-top:var(--space-4)}
+
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--space-4);margin-top:var(--space-6)}
+.section-title{font-size:var(--font-lg);font-weight:700}
+
+/* Today */
+.today-section{margin-bottom:var(--space-6)}
+.today-section-hdr{display:flex;align-items:center;gap:var(--space-2);margin-bottom:var(--space-3);font-size:var(--font-base);font-weight:700}
+.today-section-badge{background:var(--surface-2);color:var(--text-muted);font-size:var(--font-xs);font-weight:700;padding:2px 8px;border-radius:var(--radius-full)}
+.today-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:var(--space-4);margin-bottom:var(--space-3);display:flex;align-items:center;gap:var(--space-3)}
+.today-card-info{flex:1;min-width:0;cursor:pointer}
+.today-card-handle{font-weight:700;font-size:var(--font-base)}
+.today-card-sub{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:5px}
+.days-badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:var(--radius-full);font-size:var(--font-xs);font-weight:700;background:rgba(124,92,191,.12);color:var(--accent-light)}
+.empty-today{text-align:center;padding:var(--space-5) var(--space-4);color:var(--text-muted);font-size:var(--font-sm);background:var(--surface);border:1px dashed var(--border);border-radius:var(--radius-lg)}
+.empty-today .e-emoji{font-size:1.5rem;display:block;margin-bottom:var(--space-2)}
+
+/* Prospects */
+.prospect-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:var(--space-4);margin-bottom:var(--space-3);transition:border-color var(--dur-fast);cursor:pointer}
+.prospect-card:hover{border-color:rgba(124,92,191,.5)}
+.prospect-card.selected{border-color:rgba(124,92,191,.6);background:rgba(124,92,191,.06)}
+.p-handle{font-size:var(--font-lg);font-weight:700}
+.p-meta{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:6px}
+.p-dates{font-size:var(--font-xs);color:var(--text-muted);margin-top:8px;line-height:1.6}
+.check-box{width:24px;height:24px;border:2px solid var(--border);border-radius:6px;flex-shrink:0;display:none;cursor:pointer;align-items:center;justify-content:center;transition:all var(--dur-fast)}
+.select-mode .check-box{display:flex}
+.prospect-card.selected .check-box{background:var(--accent);border-color:var(--accent)}
+
+/* Modals */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);display:flex;align-items:flex-end;justify-content:center;z-index:200;opacity:0;pointer-events:none;transition:opacity var(--dur-base) ease}
+.modal-overlay.open{opacity:1;pointer-events:all}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg) var(--radius-lg) 0 0;width:100%;max-width:560px;max-height:90vh;overflow-y:auto;padding:var(--space-6);transform:translateY(20px);transition:transform var(--dur-base) ease;position:relative}
+.modal-overlay.open .modal{transform:translateY(0)}
+.modal-handle{width:36px;height:4px;background:var(--surface-3);border-radius:var(--radius-full);margin:0 auto var(--space-5)}
+.modal-title{font-size:var(--font-xl);font-weight:700;margin-bottom:var(--space-5)}
+.modal-close{position:absolute;top:var(--space-4);right:var(--space-4);background:var(--surface-2);border:none;color:var(--text-muted);cursor:pointer;width:32px;height:32px;border-radius:50%;font-size:1.1rem;display:flex;align-items:center;justify-content:center}
+
+/* Detail overlay */
+#detail-overlay{position:fixed;inset:0;background:var(--bg);z-index:150;overflow-y:auto;display:none}
+#detail-overlay.open{display:block}
+.detail-topbar{position:sticky;top:0;background:var(--bg);border-bottom:1px solid var(--border);padding:0 var(--space-4);height:var(--topbar-h);display:flex;align-items:center;gap:var(--space-3);z-index:10}
+.detail-body{padding:var(--space-4);max-width:700px;margin:0 auto;padding-bottom:var(--space-10)}
+
+/* Conversation log */
+.log-timeline{margin-top:var(--space-4)}
+.log-entry{display:flex;gap:var(--space-3);margin-bottom:var(--space-4);position:relative}
+.log-entry:not(:last-child)::after{content:'';position:absolute;left:15px;top:34px;bottom:-var(--space-4);width:2px;background:var(--surface-3);height:calc(100% - 10px)}
+.log-dot{width:32px;height:32px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:.85rem;background:var(--surface-2);border:2px solid var(--border);z-index:1}
+.log-dot.type-stage{background:rgba(124,92,191,.2);border-color:var(--accent)}
+.log-dot.type-sent{background:rgba(59,130,246,.15);border-color:#3b82f6}
+.log-dot.type-reply{background:rgba(34,197,94,.15);border-color:var(--success)}
+.log-content{flex:1;min-width:0;padding-top:4px}
+.log-header{display:flex;align-items:center;gap:var(--space-2);flex-wrap:wrap;margin-bottom:3px}
+.log-type{font-size:var(--font-xs);font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em}
+.log-time{font-size:var(--font-xs);color:var(--text-dim)}
+.log-text{font-size:var(--font-sm);color:var(--text);line-height:1.5}
+.log-link{font-size:var(--font-xs);color:var(--accent-light);margin-top:3px;word-break:break-all}
+
+/* Info rows */
+.info-row{display:flex;justify-content:space-between;align-items:flex-start;padding:9px 0;border-bottom:1px solid var(--border)}
+.info-row:last-child{border-bottom:none}
+.info-label{font-size:var(--font-xs);font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;flex-shrink:0}
+.info-val{font-size:var(--font-sm);font-weight:500;text-align:right;max-width:60%}
+
+/* Funnel */
+.funnel-row{display:flex;align-items:center;gap:var(--space-3);margin-bottom:9px}
+.funnel-label{width:130px;font-size:var(--font-xs);color:var(--text-muted);text-align:right;flex-shrink:0;line-height:1.3}
+.funnel-bar-wrap{flex:1;height:26px;background:var(--surface-2);border-radius:var(--radius-sm);overflow:hidden}
+.funnel-bar{height:100%;border-radius:var(--radius-sm);display:flex;align-items:center;padding-left:8px;transition:width .6s ease}
+.funnel-bar-text{font-size:var(--font-xs);font-weight:700;white-space:nowrap}
+.funnel-count{width:28px;font-size:var(--font-sm);font-weight:700;color:var(--text-muted);text-align:left;flex-shrink:0}
+
+/* Tables */
+.tbl{width:100%;border-collapse:collapse;font-size:var(--font-sm)}
+.tbl th{text-align:left;font-size:var(--font-xs);font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;padding:var(--space-2) var(--space-3);border-bottom:1px solid var(--border)}
+.tbl td{padding:9px var(--space-3);border-bottom:1px solid var(--border)}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:rgba(124,92,191,.04)}
+
+/* Bulk bar */
+.select-mode-bar{position:fixed;bottom:var(--nav-h);left:0;right:0;background:var(--surface);border-top:1px solid var(--border);padding:var(--space-3) var(--space-4);display:flex;gap:var(--space-3);align-items:center;z-index:99;transform:translateY(100%);transition:transform var(--dur-base)}
+.select-mode-bar.visible{transform:translateY(0)}
+
+mark{background:rgba(245,158,11,.25);color:inherit;border-radius:2px;padding:0 1px}
+
+.empty-state{text-align:center;padding:var(--space-10) var(--space-4)}
+.empty-emoji{font-size:2.5rem;display:block;margin-bottom:var(--space-3)}
+.empty-title{font-size:var(--font-lg);font-weight:700;margin-bottom:var(--space-2)}
+.empty-desc{color:var(--text-muted);font-size:var(--font-sm);max-width:280px;margin:0 auto var(--space-5)}
+
+.activity-item{display:flex;gap:var(--space-3);padding:11px 0;border-bottom:1px solid var(--border)}
+.activity-item:last-child{border-bottom:none}
+.activity-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);margin-top:6px;flex-shrink:0}
+.activity-content{flex:1;min-width:0}
+.activity-handle{font-weight:700;font-size:var(--font-sm)}
+.activity-detail{font-size:var(--font-sm);color:var(--text-muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.activity-time{font-size:var(--font-xs);color:var(--text-dim);flex-shrink:0;margin-top:2px}
+
+.text-muted{color:var(--text-muted)}
+.text-accent{color:var(--accent-light)}
+.text-success{color:var(--success)}
+.text-warning{color:var(--warning)}
+.text-danger{color:var(--danger)}
+.fw-700{font-weight:700}
+.hidden{display:none!important}
+.trend-up{color:var(--success)}
+.trend-down{color:var(--danger)}
+
+@media(min-width:768px){
+  #sidebar{display:flex}
+  #main{padding-left:var(--sidebar-w);padding-bottom:var(--space-8)}
+  #bottom-nav{display:none}
+  .stats-grid{grid-template-columns:repeat(3,1fr)}
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <nav id="sidebar">
+    <div class="sidebar-logo">
+      <h1>JX Tracker</h1>
+      <p>Instagram Outreach</p>
+    </div>
+    <div class="sidebar-nav">
+      <button class="nav-item active" onclick="navigateTo('today')" data-page="today"><span class="nav-icon">🔥</span>Today</button>
+      <button class="nav-item" onclick="navigateTo('prospects')" data-page="prospects"><span class="nav-icon">📋</span>Prospects</button>
+      <button class="nav-item" onclick="navigateTo('log')" data-page="log"><span class="nav-icon">➕</span>Log Outreach</button>
+      <button class="nav-item" onclick="navigateTo('analytics')" data-page="analytics"><span class="nav-icon">📊</span>Analytics</button>
+      <button class="nav-item" onclick="navigateTo('settings')" data-page="settings"><span class="nav-icon">⚙️</span>Settings</button>
+    </div>
+  </nav>
+
+  <div id="main">
+    <div class="top-bar">
+      <span class="top-bar-title" id="page-title">Today</span>
+      <span class="dm-pill gray" id="dm-pill">Today: 0 / 20 DMs</span>
+    </div>
+
+    <!-- TODAY -->
+    <div class="page active" id="page-today">
+      <div id="today-content"></div>
+    </div>
+
+    <!-- PROSPECTS -->
+    <div class="page" id="page-prospects">
+      <div style="display:flex;gap:var(--space-2);margin-bottom:var(--space-3);align-items:center">
+        <input class="form-input" id="p-search" placeholder="🔍 Search handle, city, hashtag, notes..." oninput="renderProspects()" style="min-height:44px;flex:1">
+        <button class="btn btn-secondary btn-sm" id="select-btn" onclick="toggleSelectMode()" style="white-space:nowrap;flex-shrink:0">Select</button>
+      </div>
+      <div style="display:flex;gap:var(--space-2);margin-bottom:var(--space-4);overflow-x:auto;padding-bottom:4px">
+        <select class="form-select" id="p-filter-stage" onchange="renderProspects()" style="min-height:40px;font-size:var(--font-sm);min-width:140px">
+          <option value="">All Stages</option>
+        </select>
+        <select class="form-select" id="p-filter-industry" onchange="renderProspects()" style="min-height:40px;font-size:var(--font-sm);min-width:130px">
+          <option value="">All Industries</option>
+        </select>
+        <select class="form-select" id="p-sort" onchange="renderProspects()" style="min-height:40px;font-size:var(--font-sm);min-width:130px">
+          <option value="date-desc">Newest First</option>
+          <option value="date-asc">Oldest First</option>
+          <option value="updated">Last Updated</option>
+          <option value="stage">By Stage</option>
+        </select>
+      </div>
+      <div style="font-size:var(--font-sm);color:var(--text-muted);margin-bottom:var(--space-3)" id="p-count"></div>
+      <div id="p-list"></div>
+    </div>
+
+    <!-- LOG -->
+    <div class="page" id="page-log">
+      <div class="card">
+        <h2 style="font-size:var(--font-xl);font-weight:700;margin-bottom:var(--space-5)">Add New Prospect</h2>
+        <form id="log-form" onsubmit="handleLogSubmit(event)">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Instagram Handle *</label>
+              <div class="input-prefix"><span class="prefix">@</span><input class="form-input" id="f-handle" placeholder="username" required></div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Industry *</label>
+              <select class="form-select" id="f-industry" required>
+                <option value="">Select...</option>
+                <option>Barbershop</option><option>Hair Salon</option><option>Nail Salon</option>
+                <option>Tattoo Studio</option><option>Spa / Wellness</option><option>Lash / Brow Studio</option>
+                <option>Gym / Fitness</option><option>Yoga Studio</option><option>Personal Trainer</option>
+                <option>Restaurant</option><option>Cafe / Coffee Shop</option><option>Food Truck</option>
+                <option>Real Estate Agent</option><option>Mortgage Broker</option><option>Insurance Agent</option>
+                <option>Chiropractor</option><option>Dentist</option><option>Med Spa</option>
+                <option>Photographer</option><option>Videographer</option><option>DJ / Entertainer</option>
+                <option>Contractor / Trades</option><option>Cleaning Service</option><option>Landscaping</option>
+                <option>Boutique / Retail</option><option>Other</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Stage *</label>
+              <select class="form-select" id="f-stage" required><option value="">Select...</option></select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Date Contacted *</label>
+              <input class="form-input" type="date" id="f-date" required>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Follower Count</label>
+              <input class="form-input" type="number" id="f-followers" placeholder="e.g. 2500" min="0">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Project Value ($)</label>
+              <input class="form-input" type="number" id="f-value" value="800" min="0">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">City</label>
+              <input class="form-input" id="f-city" placeholder="e.g. Austin">
+            </div>
+            <div class="form-group">
+              <label class="form-label">State</label>
+              <select class="form-select" id="f-state"><option value="">Select state...</option></select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Source Hashtag</label>
+              <div class="input-prefix"><span class="prefix">#</span><input class="form-input" id="f-hashtag" placeholder="austinbarbershop"></div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Next Action Date</label>
+              <input class="form-input" type="date" id="f-next-action">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Has Booking Tool?</label>
+            <div class="toggle-group">
+              <button type="button" class="toggle-btn active" id="booking-no" onclick="setBooking(false)">No</button>
+              <button type="button" class="toggle-btn" id="booking-yes" onclick="setBooking(true)">Yes</button>
+            </div>
+          </div>
+          <div id="booking-fields" class="hidden">
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Booking Tool Name</label>
+                <input class="form-input" id="f-booking-name" placeholder="e.g. Booksy, Calendly">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Booking URL</label>
+                <input class="form-input" id="f-booking-url" placeholder="https://...">
+              </div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Initial Message Type</label>
+            <select class="form-select" id="f-message-type" onchange="handleMsgType()">
+              <option value="compliment">Compliment Opener</option>
+              <option value="question">Question Opener</option>
+              <option value="custom">Custom</option>
+            </select>
+          </div>
+          <div class="form-group hidden" id="custom-msg-group">
+            <label class="form-label">Custom Message</label>
+            <textarea class="form-textarea" id="f-custom-msg" placeholder="Paste your message..."></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Opening Note (optional)</label>
+            <textarea class="form-textarea" id="f-note" placeholder="Any initial notes..." style="min-height:70px"></textarea>
+          </div>
+          <button class="btn btn-primary" type="submit" id="log-submit-btn">Add Prospect</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- ANALYTICS -->
+    <div class="page" id="page-analytics">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--space-5)">
+        <h2 style="font-size:var(--font-xl);font-weight:700">Analytics</h2>
+        <button class="btn btn-secondary btn-sm" onclick="exportCSV()">Export CSV</button>
+      </div>
+      <div id="analytics-content"></div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="page" id="page-settings">
+      <div class="card mb-4">
+        <h2 style="font-size:var(--font-xl);font-weight:700;margin-bottom:var(--space-5)">Settings</h2>
+        <div class="form-group">
+          <label class="form-label">Daily DM Target</label>
+          <input class="form-input" type="number" id="s-dm-target" min="1" max="200" onchange="saveSettingsFields()">
+          <div class="form-hint">Number of DMs to send per day (shown in top pill)</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Follow-up Threshold (hours)</label>
+          <input class="form-input" type="number" id="s-followup-hours" min="1" max="720" onchange="saveSettingsFields()">
+          <div class="form-hint">Prospects in DM Sent / Seen No Reply for this long appear in "Going Cold"</div>
+        </div>
+      </div>
+      <div class="card mb-4">
+        <h3 style="font-size:var(--font-lg);font-weight:700;margin-bottom:var(--space-4)">Data Management</h3>
+        <div style="display:flex;flex-direction:column;gap:var(--space-3)">
+          <button class="btn btn-secondary btn-full" onclick="exportJSON()">📦 Export All Data (JSON backup)</button>
+          <label class="btn btn-secondary btn-full" style="cursor:pointer;min-height:48px">
+            📂 Import from JSON
+            <input type="file" accept=".json" style="display:none" onchange="importJSON(event)">
+          </label>
+          <button class="btn btn-danger btn-full" onclick="clearAllData()">🗑️ Clear All Data</button>
+        </div>
+      </div>
+      <div class="card">
+        <p style="font-size:var(--font-sm);color:var(--text-muted)">JX Outreach Tracker v2.0<br>All data stored locally in your browser · No backend · No account needed</p>
+      </div>
+    </div>
+  </div>
+
+  <nav id="bottom-nav">
+    <button class="bnav-item active" onclick="navigateTo('today')" data-page="today"><span class="nav-icon">🔥</span><span>Today</span></button>
+    <button class="bnav-item" onclick="navigateTo('prospects')" data-page="prospects"><span class="nav-icon">📋</span><span>Prospects</span></button>
+    <button class="bnav-item" onclick="navigateTo('log')" data-page="log"><span class="nav-icon">➕</span><span>Log</span></button>
+    <button class="bnav-item" onclick="navigateTo('analytics')" data-page="analytics"><span class="nav-icon">📊</span><span>Analytics</span></button>
+    <button class="bnav-item" onclick="navigateTo('settings')" data-page="settings"><span class="nav-icon">⚙️</span><span>Settings</span></button>
+  </nav>
+</div>
+
+<!-- Bulk select bar -->
+<div class="select-mode-bar" id="bulk-bar">
+  <select class="form-select" id="bulk-stage" style="min-height:40px;font-size:var(--font-sm);flex:1"><option value="">Move to stage...</option></select>
+  <button class="btn btn-primary" style="min-height:40px;min-width:130px;font-size:var(--font-sm)" onclick="applyBulkStage()">Update Selected</button>
+</div>
+
+<!-- Quick stage modal -->
+<div class="modal-overlay" id="quick-modal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <button class="modal-close" onclick="closeModal('quick-modal')">✕</button>
+    <div class="modal-title" id="qm-title">Update Stage</div>
+    <div class="form-group">
+      <label class="form-label">New Stage</label>
+      <select class="form-select" id="qm-stage"></select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Note (optional)</label>
+      <textarea class="form-textarea" id="qm-note" placeholder="What happened?..." style="min-height:70px"></textarea>
+    </div>
+    <input type="hidden" id="qm-id">
+    <button class="btn btn-primary" onclick="saveQuickStage()">Save Update</button>
+  </div>
+</div>
+
+<!-- Add log entry modal -->
+<div class="modal-overlay" id="log-entry-modal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <button class="modal-close" onclick="closeModal('log-entry-modal')">✕</button>
+    <div class="modal-title">Add Log Entry</div>
+    <div class="form-group">
+      <label class="form-label">Type</label>
+      <select class="form-select" id="le-type">
+        <option value="sent-opener">Sent opener</option>
+        <option value="they-replied">They replied</option>
+        <option value="sent-pitch">Sent pitch</option>
+        <option value="sent-mockup">Sent mockup</option>
+        <option value="had-call">Had call</option>
+        <option value="other">Other</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">What happened?</label>
+      <textarea class="form-textarea" id="le-text" placeholder="Describe what was sent or said..."></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Link (optional)</label>
+      <input class="form-input" id="le-link" placeholder="https://...">
+    </div>
+    <input type="hidden" id="le-id">
+    <button class="btn btn-primary" onclick="saveLogEntry()">Add Entry</button>
+  </div>
+</div>
+
+<!-- Edit prospect modal -->
+<div class="modal-overlay" id="edit-modal">
+  <div class="modal" style="max-height:88vh">
+    <div class="modal-handle"></div>
+    <button class="modal-close" onclick="closeModal('edit-modal')">✕</button>
+    <div class="modal-title">Edit Prospect</div>
+    <div id="edit-form-body"></div>
+  </div>
+</div>
+
+<!-- Prospect detail overlay -->
+<div id="detail-overlay">
+  <div class="detail-topbar">
+    <button class="btn btn-secondary btn-sm" onclick="closeDetail()">← Back</button>
+    <span style="font-weight:700;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin:0 var(--space-2)" id="detail-title"></span>
+    <button class="btn btn-secondary btn-sm" onclick="openQuickModal(currentDetailId)">Update Stage</button>
+  </div>
+  <div class="detail-body" id="detail-body"></div>
+</div>
+
+<script>
+// ============================================================
+// CONSTANTS
+// ============================================================
+const STORAGE_KEY = 'jx_prospects';
+const SETTINGS_KEY = 'jx_settings';
+
+const STAGES = [
+  'Researched','Engaged','DM Sent','Seen No Reply','Replied',
+  'Pitched','Mockup Requested','Mockup Sent','Negotiating',
+  'Closed Won','Closed Lost','Ghosted'
+];
+
+const STAGE_CLASS = {
+  'Researched':'s-researched','Engaged':'s-engaged','DM Sent':'s-dm-sent',
+  'Seen No Reply':'s-seen-no-reply','Replied':'s-replied','Pitched':'s-pitched',
+  'Mockup Requested':'s-mockup-requested','Mockup Sent':'s-mockup-sent',
+  'Negotiating':'s-negotiating','Closed Won':'s-closed-won',
+  'Closed Lost':'s-closed-lost','Ghosted':'s-ghosted'
+};
+
+const STAGE_COLOR = {
+  'Researched':'#9090b0','Engaged':'#7dd3fc','DM Sent':'#60a5fa',
+  'Seen No Reply':'#fbbf24','Replied':'#a78bfa','Pitched':'#fb923c',
+  'Mockup Requested':'#f472b6','Mockup Sent':'#f59e0b',
+  'Negotiating':'#2dd4bf','Closed Won':'#22c55e',
+  'Closed Lost':'#f87171','Ghosted':'#9ca3af'
+};
+
+const LOG_ICON = {
+  'sent-opener':'📤','they-replied':'💬','sent-pitch':'📝',
+  'sent-mockup':'🎨','had-call':'📞','stage-change':'🔄','other':'📌'
+};
+const LOG_DOT = {
+  'sent-opener':'type-sent','they-replied':'type-reply',
+  'sent-pitch':'type-sent','sent-mockup':'type-sent',
+  'had-call':'type-reply','stage-change':'type-stage','other':''
+};
+
+const OLD_STAGE_MAP = {
+  'No reply':'DM Sent','Seen no reply':'Seen No Reply',
+  'Followed up':'DM Sent','Not interested':'Closed Lost',
+  'Interested in mockup':'Mockup Requested','Mockup sent':'Mockup Sent',
+  'Closed':'Closed Won','Lost after mockup':'Closed Lost'
+};
+
+const US_STATES = ['Alabama','Alaska','Arizona','Arkansas','California','Colorado',
+  'Connecticut','Delaware','Florida','Georgia','Hawaii','Idaho','Illinois','Indiana',
+  'Iowa','Kansas','Kentucky','Louisiana','Maine','Maryland','Massachusetts','Michigan',
+  'Minnesota','Mississippi','Missouri','Montana','Nebraska','Nevada','New Hampshire',
+  'New Jersey','New Mexico','New York','North Carolina','North Dakota','Ohio','Oklahoma',
+  'Oregon','Pennsylvania','Rhode Island','South Carolina','South Dakota','Tennessee',
+  'Texas','Utah','Vermont','Virginia','Washington','West Virginia','Wisconsin','Wyoming'];
+
+let currentDetailId = null;
+let selectMode = false;
+let selectedIds = new Set();
+
+// ============================================================
+// SETTINGS
+// ============================================================
+function getSettings() {
+  try { return Object.assign({dailyTarget:20,followUpHours:48}, JSON.parse(localStorage.getItem(SETTINGS_KEY)||'{}')); }
+  catch { return {dailyTarget:20,followUpHours:48}; }
+}
+function saveSettingsFields() {
+  const s = getSettings();
+  s.dailyTarget = parseInt(document.getElementById('s-dm-target').value) || 20;
+  s.followUpHours = parseInt(document.getElementById('s-followup-hours').value) || 48;
+  localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
+  updateDmPill();
+}
+
+// ============================================================
+// STORAGE & MIGRATION
+// ============================================================
+function getRaw() { try { return JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]'); } catch { return []; } }
+function saveAll(ps) { localStorage.setItem(STORAGE_KEY, JSON.stringify(ps)); }
+function uid() { return Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
+
+function migrate(p) {
+  if (!p.conversationLog) p.conversationLog = [];
+  if (p.followerCount === undefined) p.followerCount = null;
+  if (p.hasBookingTool === undefined) p.hasBookingTool = false;
+  if (!p.bookingToolName) p.bookingToolName = '';
+  if (!p.bookingToolUrl) p.bookingToolUrl = '';
+  if (!p.city) p.city = '';
+  if (!p.state) p.state = '';
+  if (!p.lastActionDate) p.lastActionDate = p.updatedAt || p.createdAt;
+  if (!p.nextActionDate) p.nextActionDate = '';
+  if (p.projectValue === undefined) p.projectValue = 800;
+  if (!p.sourceHashtag) p.sourceHashtag = '';
+  // Remap old stage names
+  if (OLD_STAGE_MAP[p.currentStage]) p.currentStage = OLD_STAGE_MAP[p.currentStage];
+  if (p.stageHistory) {
+    p.stageHistory = p.stageHistory.map(s => ({
+      ...s, stage: OLD_STAGE_MAP[s.stage] || s.stage
+    }));
+  }
+  return p;
+}
+
+function getAll() { return getRaw().map(migrate); }
+
+function addProspect(d) {
+  const ps = getRaw();
+  const now = new Date().toISOString();
+  const stage = d.stage || 'Researched';
+  const p = {
+    id: uid(),
+    handle: (d.handle.startsWith('@') ? d.handle : '@'+d.handle).toLowerCase(),
+    industry: d.industry,
+    initialMessage: d.messageType || 'compliment',
+    customMessage: d.customMessage || '',
+    dateContacted: d.dateContacted,
+    currentStage: stage,
+    stageHistory: [{ stage, timestamp: now, note: d.initialNote||'' }],
+    conversationLog: [{ id:uid(), timestamp:now, type:'stage-change', text:'Prospect added in stage: '+stage, link:'' }],
+    notes: d.initialNote || '',
+    followerCount: d.followerCount || null,
+    hasBookingTool: !!d.hasBookingTool,
+    bookingToolName: d.bookingToolName || '',
+    bookingToolUrl: d.bookingToolUrl || '',
+    city: d.city || '',
+    state: d.state || '',
+    lastActionDate: now,
+    nextActionDate: d.nextActionDate || '',
+    projectValue: d.projectValue || 800,
+    sourceHashtag: d.sourceHashtag || '',
+    createdAt: now,
+    updatedAt: now
+  };
+  if (d.initialNote) {
+    p.conversationLog.push({ id:uid(), timestamp:now, type:'other', text:d.initialNote, link:'' });
+  }
+  ps.push(p);
+  saveAll(ps);
+  return p;
+}
+
+function updateStage(id, stage, note) {
+  const ps = getAll();
+  const i = ps.findIndex(p => p.id === id);
+  if (i < 0) return null;
+  const now = new Date().toISOString();
+  ps[i].currentStage = stage;
+  ps[i].stageHistory.push({ stage, timestamp:now, note:note||'' });
+  ps[i].lastActionDate = now;
+  ps[i].updatedAt = now;
+  ps[i].conversationLog.push({
+    id: uid(), timestamp: now, type: 'stage-change',
+    text: 'Stage → '+stage+(note?' · '+note:''), link: ''
+  });
+  saveAll(ps);
+  return ps[i];
+}
+
+function addLogEntry(id, entry) {
+  const ps = getAll();
+  const i = ps.findIndex(p => p.id === id);
+  if (i < 0) return;
+  ps[i].conversationLog.push({ id:uid(), timestamp:new Date().toISOString(), ...entry });
+  ps[i].updatedAt = new Date().toISOString();
+  saveAll(ps);
+}
+
+function updateFields(id, fields) {
+  const ps = getAll();
+  const i = ps.findIndex(p => p.id === id);
+  if (i < 0) return;
+  Object.assign(ps[i], fields, { updatedAt: new Date().toISOString() });
+  saveAll(ps);
+  return ps[i];
+}
+
+function deleteProspect(id) { saveAll(getRaw().filter(p => p.id !== id)); }
+
+// ============================================================
+// DATE HELPERS
+// ============================================================
+function todayStr() { return new Date().toISOString().split('T')[0]; }
+
+function weekStart(d = new Date()) {
+  const c = new Date(d);
+  c.setDate(c.getDate() - (c.getDay() === 0 ? 6 : c.getDay() - 1));
+  c.setHours(0,0,0,0);
+  return c;
+}
+
+function daysDiff(iso) {
+  if (!iso) return 0;
+  return Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
+}
+function hoursDiff(iso) {
+  if (!iso) return 0;
+  return (Date.now() - new Date(iso).getTime()) / 3600000;
+}
+function daysInStage(p) {
+  const hist = p.stageHistory || [];
+  const last = hist[hist.length - 1];
+  if (!last) return 0;
+  return Math.floor((Date.now() - new Date(last.timestamp).getTime()) / 86400000);
+}
+function timeAgo(iso) {
+  const ms = Date.now() - new Date(iso).getTime();
+  const m = Math.floor(ms/60000), h = Math.floor(ms/3600000), d = Math.floor(ms/86400000);
+  if (m < 1) return 'just now';
+  if (m < 60) return m+'m ago';
+  if (h < 24) return h+'h ago';
+  if (d === 1) return 'yesterday';
+  if (d < 7) return d+'d ago';
+  if (d < 30) return Math.floor(d/7)+'w ago';
+  return new Date(iso).toLocaleDateString('en-US',{month:'short',day:'numeric'});
+}
+function fmtDate(iso) {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+}
+function fmtDateTime(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return d.toLocaleDateString('en-US',{month:'short',day:'numeric'}) + ' ' +
+    d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+}
+function fmtFollowers(n) {
+  if (!n && n !== 0) return '—';
+  return n >= 1000 ? (n/1000).toFixed(1)+'k' : String(n);
+}
+
+// ============================================================
+// BADGES
+// ============================================================
+function stageBadge(s) {
+  return `<span class="stage-badge ${STAGE_CLASS[s]||'s-researched'}">${s||'—'}</span>`;
+}
+function industryPill(n) {
+  return `<span class="industry-pill">${n||'—'}</span>`;
+}
+
+// ============================================================
+// DM PILL
+// ============================================================
+function updateDmPill() {
+  const ps = getAll();
+  const settings = getSettings();
+  const today = todayStr();
+  let count = 0;
+  for (const p of ps) {
+    if (p.stageHistory.some(s => s.stage === 'DM Sent' && s.timestamp.startsWith(today))) count++;
+  }
+  const target = settings.dailyTarget;
+  const pill = document.getElementById('dm-pill');
+  if (!pill) return;
+  pill.textContent = `Today: ${count} / ${target} DMs`;
+  const pct = count / target;
+  pill.className = 'dm-pill ' + (pct >= 1 ? 'green' : pct >= 0.5 ? 'amber' : 'gray');
+}
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+const PAGE_TITLES = {today:'Today',prospects:'Prospects',log:'Log Outreach',analytics:'Analytics',settings:'Settings'};
+
+function navigateTo(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  const pg = document.getElementById('page-'+page);
+  if (pg) pg.classList.add('active');
+  document.querySelectorAll('[data-page]').forEach(el => {
+    el.classList.toggle('active', el.dataset.page === page);
+  });
+  document.getElementById('page-title').textContent = PAGE_TITLES[page] || page;
+  if (page !== 'prospects' && selectMode) toggleSelectMode();
+  if (page === 'today') renderToday();
+  if (page === 'prospects') renderProspects();
+  if (page === 'analytics') renderAnalytics();
+  if (page === 'settings') renderSettingsPage();
+}
+
+// ============================================================
+// TODAY VIEW
+// ============================================================
+function renderToday() {
+  const ps = getAll();
+  const settings = getSettings();
+  const today = todayStr();
+
+  const hot = ps.filter(p => ['Replied','Mockup Requested','Negotiating'].includes(p.currentStage))
+    .sort((a,b) => new Date(a.updatedAt) - new Date(b.updatedAt));
+
+  const followUpDue = ps.filter(p => p.nextActionDate && p.nextActionDate <= today)
+    .sort((a,b) => a.nextActionDate.localeCompare(b.nextActionDate));
+
+  const goingCold = ps.filter(p =>
+    ['DM Sent','Seen No Reply'].includes(p.currentStage) &&
+    hoursDiff(p.lastActionDate || p.updatedAt) >= settings.followUpHours
+  ).sort((a,b) => daysInStage(b) - daysInStage(a));
+
+  const readyToDm = ps.filter(p => p.currentStage === 'Engaged');
+
+  document.getElementById('today-content').innerHTML =
+    todaySection('🔥 Hot — Act Now', hot, '✅', 'All caught up! No hot prospects right now.') +
+    todaySection('⏰ Follow-up Due', followUpDue, '📅', 'No follow-ups due today.') +
+    todaySection('💀 Going Cold', goingCold, '❄️', `No prospects going cold (threshold: ${settings.followUpHours}h).`) +
+    todaySection('🆕 Ready to DM', readyToDm, '📱', 'No prospects in Engaged stage yet.');
+}
+
+function todaySection(title, prospects, emoji, emptyMsg) {
+  const cards = prospects.length === 0
+    ? `<div class="empty-today"><span class="e-emoji">${emoji}</span>${emptyMsg}</div>`
+    : prospects.map(p => {
+        const dis = daysInStage(p);
+        return `<div class="today-card">
+          <div class="today-card-info" onclick="openDetail('${p.id}')">
+            <div class="today-card-handle">${p.handle}</div>
+            <div class="today-card-sub">
+              ${stageBadge(p.currentStage)}
+              ${industryPill(p.industry)}
+              <span class="days-badge">${dis}d in stage</span>
+            </div>
+          </div>
+          <button class="btn btn-secondary btn-sm" onclick="openQuickModal('${p.id}')">Update</button>
+        </div>`;
+      }).join('');
+  return `<div class="today-section">
+    <div class="today-section-hdr">
+      <span>${title}</span>
+      ${prospects.length > 0 ? `<span class="today-section-badge">${prospects.length}</span>` : ''}
+    </div>
+    ${cards}
+  </div>`;
+}
+
+// ============================================================
+// PROSPECTS LIST
+// ============================================================
+function renderProspects() {
+  const search = document.getElementById('p-search').value;
+  const searchLow = search.toLowerCase();
+  const stFilt = document.getElementById('p-filter-stage').value;
+  const indFilt = document.getElementById('p-filter-industry').value;
+  const sortBy = document.getElementById('p-sort').value;
+
+  let ps = getAll();
+
+  // Populate stage filter once
+  const sfEl = document.getElementById('p-filter-stage');
+  if (sfEl.options.length <= 1) {
+    STAGES.forEach(s => { const o = document.createElement('option'); o.value=s; o.textContent=s; sfEl.appendChild(o); });
+  }
+  // Populate industry filter
+  const ifEl = document.getElementById('p-filter-industry');
+  if (ifEl.options.length <= 1) {
+    const inds = [...new Set(getAll().map(p => p.industry).filter(Boolean))].sort();
+    inds.forEach(ind => { const o = document.createElement('option'); o.value=ind; o.textContent=ind; ifEl.appendChild(o); });
+  }
+
+  if (searchLow) {
+    ps = ps.filter(p => {
+      const logText = (p.conversationLog||[]).map(e => (e.text||'') + ' ' + (e.link||'')).join(' ').toLowerCase();
+      return p.handle.includes(searchLow) ||
+        (p.city||'').toLowerCase().includes(searchLow) ||
+        (p.state||'').toLowerCase().includes(searchLow) ||
+        (p.sourceHashtag||'').toLowerCase().includes(searchLow) ||
+        (p.notes||'').toLowerCase().includes(searchLow) ||
+        logText.includes(searchLow);
+    });
+  }
+  if (stFilt) ps = ps.filter(p => p.currentStage === stFilt);
+  if (indFilt) ps = ps.filter(p => p.industry === indFilt);
+
+  if (sortBy === 'date-desc') ps.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+  else if (sortBy === 'date-asc') ps.sort((a,b) => new Date(a.createdAt) - new Date(b.createdAt));
+  else if (sortBy === 'updated') ps.sort((a,b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+  else if (sortBy === 'stage') ps.sort((a,b) => STAGES.indexOf(a.currentStage) - STAGES.indexOf(b.currentStage));
+
+  document.getElementById('p-count').textContent = `${ps.length} prospect${ps.length !== 1 ? 's' : ''}`;
+
+  const list = document.getElementById('p-list');
+  list.className = selectMode ? 'select-mode' : '';
+
+  if (ps.length === 0) {
+    const allEmpty = getRaw().length === 0;
+    list.innerHTML = `<div class="empty-state">
+      <span class="empty-emoji">${allEmpty ? '📱' : '🔍'}</span>
+      <div class="empty-title">${allEmpty ? 'No prospects yet' : 'No results'}</div>
+      <div class="empty-desc">${allEmpty ? 'Go to Log Outreach to add your first prospect.' : 'Try adjusting your search or filters.'}</div>
+      ${allEmpty ? `<button class="btn btn-primary" style="max-width:200px;margin:0 auto" onclick="navigateTo('log')">Add Prospect</button>` : ''}
+    </div>`;
+    return;
+  }
+
+  function hl(txt) {
+    if (!searchLow || !txt) return txt || '';
+    return txt.replace(new RegExp('(' + escRe(searchLow) + ')', 'gi'), '<mark>$1</mark>');
+  }
+
+  list.innerHTML = ps.map(p => {
+    const dis = daysInStage(p);
+    const sel = selectedIds.has(p.id);
+    const loc = [p.city, p.state].filter(Boolean).join(', ');
+    return `<div class="prospect-card ${sel ? 'selected' : ''}" id="pc-${p.id}">
+      <div style="display:flex;align-items:flex-start;gap:var(--space-3)">
+        <div class="check-box" onclick="toggleSelect('${p.id}',event)">${sel ? '<span style="color:white;font-size:.75rem">✓</span>' : ''}</div>
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:var(--space-3)">
+            <div onclick="${selectMode ? `toggleSelect('${p.id}',event)` : `openDetail('${p.id}')`}" style="flex:1;min-width:0;cursor:pointer">
+              <div class="p-handle">${hl(p.handle)}</div>
+              <div class="p-meta">
+                ${industryPill(p.industry)}
+                ${stageBadge(p.currentStage)}
+                <span class="days-badge">${dis}d in stage</span>
+              </div>
+              <div class="p-dates">
+                ${loc ? hl(loc) + ' · ' : ''}Added ${fmtDate(p.dateContacted)}
+                ${p.sourceHashtag ? ' · <span style="color:var(--text-muted)">#' + hl(p.sourceHashtag) + '</span>' : ''}
+                ${p.projectValue ? ' · <span style="color:var(--success)">$' + p.projectValue + '</span>' : ''}
+                ${p.followerCount ? ' · ' + fmtFollowers(p.followerCount) + ' followers' : ''}
+              </div>
+            </div>
+            <button class="btn btn-secondary btn-sm" style="flex-shrink:0" onclick="event.stopPropagation();openQuickModal('${p.id}')">Update</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function escRe(s) { return s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'); }
+
+// ============================================================
+// SELECT MODE
+// ============================================================
+function toggleSelectMode() {
+  selectMode = !selectMode;
+  selectedIds.clear();
+  const btn = document.getElementById('select-btn');
+  btn.textContent = selectMode ? 'Cancel' : 'Select';
+  btn.style.color = selectMode ? 'var(--danger)' : '';
+  document.getElementById('bulk-bar').classList.toggle('visible', selectMode);
+  renderProspects();
+}
+
+function toggleSelect(id, e) {
+  if (e) e.stopPropagation();
+  if (selectedIds.has(id)) selectedIds.delete(id); else selectedIds.add(id);
+  renderProspects();
+}
+
+function applyBulkStage() {
+  const stage = document.getElementById('bulk-stage').value;
+  if (!stage || selectedIds.size === 0) { alert('Select prospects and a target stage first.'); return; }
+  if (!confirm(`Move ${selectedIds.size} prospect(s) to "${stage}"?`)) return;
+  selectedIds.forEach(id => updateStage(id, stage, 'Bulk stage update'));
+  toggleSelectMode();
+  updateDmPill();
+}
+
+// ============================================================
+// QUICK MODAL
+// ============================================================
+function openQuickModal(id) {
+  const ps = getAll();
+  const p = ps.find(x => x.id === id);
+  if (!p) return;
+  document.getElementById('qm-title').textContent = p.handle;
+  document.getElementById('qm-id').value = id;
+  document.getElementById('qm-note').value = '';
+  const sel = document.getElementById('qm-stage');
+  sel.innerHTML = STAGES.map(s => `<option value="${s}" ${s === p.currentStage ? 'selected' : ''}>${s}</option>`).join('');
+  openModal('quick-modal');
+}
+
+function saveQuickStage() {
+  const id = document.getElementById('qm-id').value;
+  const stage = document.getElementById('qm-stage').value;
+  const note = document.getElementById('qm-note').value;
+  updateStage(id, stage, note);
+  closeModal('quick-modal');
+  updateDmPill();
+  const ap = document.querySelector('.page.active');
+  if (ap && ap.id === 'page-today') renderToday();
+  if (ap && ap.id === 'page-prospects') renderProspects();
+  if (currentDetailId === id) renderDetail(id);
+}
+
+// ============================================================
+// DETAIL VIEW
+// ============================================================
+function openDetail(id) {
+  currentDetailId = id;
+  renderDetail(id);
+  const ov = document.getElementById('detail-overlay');
+  ov.classList.add('open');
+  ov.scrollTop = 0;
+}
+
+function closeDetail() {
+  document.getElementById('detail-overlay').classList.remove('open');
+  currentDetailId = null;
+  const ap = document.querySelector('.page.active');
+  if (ap && ap.id === 'page-today') renderToday();
+  if (ap && ap.id === 'page-prospects') renderProspects();
+}
+
+function renderDetail(id) {
+  const ps = getAll();
+  const p = ps.find(x => x.id === id);
+  if (!p) return;
+  document.getElementById('detail-title').textContent = p.handle;
+  const dis = daysInStage(p);
+  const log = (p.conversationLog || []).slice().reverse();
+
+  document.getElementById('detail-body').innerHTML = `
+    <div class="card mb-4">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:var(--space-3);margin-bottom:var(--space-4)">
+        <div>
+          <div style="font-size:var(--font-2xl);font-weight:800">${p.handle}</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">
+            ${industryPill(p.industry)}
+            ${stageBadge(p.currentStage)}
+            <span class="days-badge">${dis}d in stage</span>
+          </div>
+        </div>
+        <button class="btn btn-secondary btn-sm" onclick="openEditModal('${p.id}')">Edit Details</button>
+      </div>
+      ${infoRow('Location', [p.city, p.state].filter(Boolean).join(', ') || '—')}
+      ${infoRow('Followers', fmtFollowers(p.followerCount))}
+      ${infoRow('Project Value', p.projectValue ? '$'+p.projectValue : '—')}
+      ${infoRow('Source Hashtag', p.sourceHashtag ? '#'+p.sourceHashtag : '—')}
+      ${infoRow('Booking Tool', p.hasBookingTool ? (p.bookingToolName || 'Yes') : 'No')}
+      ${p.hasBookingTool && p.bookingToolUrl ? infoRow('Booking URL', `<a href="${p.bookingToolUrl}" style="color:var(--accent-light)" target="_blank">${p.bookingToolUrl}</a>`) : ''}
+      ${infoRow('Date Contacted', fmtDate(p.dateContacted))}
+      ${infoRow('Last Action', fmtDateTime(p.lastActionDate || p.updatedAt))}
+      ${infoRow('Next Action', p.nextActionDate ? fmtDate(p.nextActionDate) : '—')}
+      ${infoRow('Initial Message', p.initialMessage || '—')}
+    </div>
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--space-4)">
+        <span style="font-size:var(--font-lg);font-weight:700">Conversation Log</span>
+        <button class="btn btn-secondary btn-sm" onclick="openLogEntryModal('${p.id}')">+ Add Entry</button>
+      </div>
+      <div class="log-timeline">
+        ${log.length === 0
+          ? '<p class="text-muted" style="font-size:var(--font-sm)">No log entries yet. Add one above.</p>'
+          : log.map(renderLogEntry).join('')}
+      </div>
+    </div>`;
+}
+
+function infoRow(label, val) {
+  return `<div class="info-row">
+    <span class="info-label">${label}</span>
+    <span class="info-val">${val}</span>
+  </div>`;
+}
+
+function renderLogEntry(e) {
+  const icon = LOG_ICON[e.type] || '📌';
+  const dotClass = LOG_DOT[e.type] || '';
+  const typeLabel = (e.type || 'note').replace(/-/g,' ').replace(/\b\w/g, c => c.toUpperCase());
+  return `<div class="log-entry">
+    <div class="log-dot ${dotClass}">${icon}</div>
+    <div class="log-content">
+      <div class="log-header">
+        <span class="log-type">${typeLabel}</span>
+        <span class="log-time">${fmtDateTime(e.timestamp)}</span>
+      </div>
+      ${e.text ? `<div class="log-text">${e.text}</div>` : ''}
+      ${e.link ? `<div class="log-link">🔗 <a href="${e.link}" style="color:var(--accent-light)" target="_blank">${e.link}</a></div>` : ''}
+    </div>
+  </div>`;
+}
+
+// ============================================================
+// LOG ENTRY MODAL
+// ============================================================
+function openLogEntryModal(id) {
+  document.getElementById('le-id').value = id;
+  document.getElementById('le-text').value = '';
+  document.getElementById('le-link').value = '';
+  openModal('log-entry-modal');
+}
+
+function saveLogEntry() {
+  const id = document.getElementById('le-id').value;
+  const type = document.getElementById('le-type').value;
+  const text = document.getElementById('le-text').value.trim();
+  const link = document.getElementById('le-link').value.trim();
+  if (!text && !link) return;
+  addLogEntry(id, { type, text, link });
+  closeModal('log-entry-modal');
+  if (currentDetailId === id) renderDetail(id);
+}
+
+// ============================================================
+// EDIT MODAL
+// ============================================================
+function openEditModal(id) {
+  const ps = getAll();
+  const p = ps.find(x => x.id === id);
+  if (!p) return;
+  const stateOpts = US_STATES.map(s => `<option value="${s}" ${p.state===s?'selected':''}>${s}</option>`).join('');
+  document.getElementById('edit-form-body').innerHTML = `
+    <div class="form-group">
+      <label class="form-label">Handle</label>
+      <div class="input-prefix"><span class="prefix">@</span><input class="form-input" id="ef-handle" value="${p.handle.replace('@','')}"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">City</label><input class="form-input" id="ef-city" value="${p.city||''}"></div>
+      <div class="form-group"><label class="form-label">State</label>
+        <select class="form-select" id="ef-state"><option value="">Select...</option>${stateOpts}</select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Followers</label><input class="form-input" type="number" id="ef-followers" value="${p.followerCount||''}"></div>
+      <div class="form-group"><label class="form-label">Project Value ($)</label><input class="form-input" type="number" id="ef-value" value="${p.projectValue||800}"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Source Hashtag</label>
+        <div class="input-prefix"><span class="prefix">#</span><input class="form-input" id="ef-hashtag" value="${p.sourceHashtag||''}"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Next Action Date</label><input class="form-input" type="date" id="ef-next-action" value="${p.nextActionDate||''}"></div>
+    </div>
+    <div class="form-group"><label class="form-label">Has Booking Tool?</label>
+      <div class="toggle-group">
+        <button type="button" class="toggle-btn ${!p.hasBookingTool?'active':''}" id="ef-book-no" onclick="efToggleBooking(false)">No</button>
+        <button type="button" class="toggle-btn ${p.hasBookingTool?'active':''}" id="ef-book-yes" onclick="efToggleBooking(true)">Yes</button>
+      </div>
+    </div>
+    <div id="ef-booking-fields" class="${!p.hasBookingTool?'hidden':''}">
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Booking Tool</label><input class="form-input" id="ef-booking-name" value="${p.bookingToolName||''}"></div>
+        <div class="form-group"><label class="form-label">Booking URL</label><input class="form-input" id="ef-booking-url" value="${p.bookingToolUrl||''}"></div>
+      </div>
+    </div>
+    <input type="hidden" id="ef-id" value="${p.id}">
+    <button class="btn btn-primary" onclick="saveEdit()">Save Changes</button>
+    <button class="btn btn-danger btn-full mt-4" onclick="confirmDelete('${p.id}')">Delete Prospect</button>
+  `;
+  openModal('edit-modal');
+}
+
+function efToggleBooking(val) {
+  document.getElementById('ef-book-no').classList.toggle('active', !val);
+  document.getElementById('ef-book-yes').classList.toggle('active', val);
+  document.getElementById('ef-booking-fields').classList.toggle('hidden', !val);
+}
+
+function saveEdit() {
+  const id = document.getElementById('ef-id').value;
+  const bookingVisible = !document.getElementById('ef-booking-fields').classList.contains('hidden');
+  updateFields(id, {
+    handle: ('@' + document.getElementById('ef-handle').value.replace('@','')).toLowerCase(),
+    city: document.getElementById('ef-city').value.trim(),
+    state: document.getElementById('ef-state').value,
+    followerCount: parseInt(document.getElementById('ef-followers').value) || null,
+    projectValue: parseInt(document.getElementById('ef-value').value) || 800,
+    sourceHashtag: document.getElementById('ef-hashtag').value.replace('#','').trim(),
+    nextActionDate: document.getElementById('ef-next-action').value,
+    hasBookingTool: bookingVisible,
+    bookingToolName: (document.getElementById('ef-booking-name')||{}).value || '',
+    bookingToolUrl: (document.getElementById('ef-booking-url')||{}).value || ''
+  });
+  closeModal('edit-modal');
+  if (currentDetailId === id) renderDetail(id);
+}
+
+function confirmDelete(id) {
+  if (!confirm('Delete this prospect? This cannot be undone.')) return;
+  deleteProspect(id);
+  closeModal('edit-modal');
+  closeDetail();
+}
+
+// ============================================================
+// MODAL HELPERS
+// ============================================================
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+document.querySelectorAll('.modal-overlay').forEach(ov => {
+  ov.addEventListener('click', e => { if (e.target === ov) ov.classList.remove('open'); });
+});
+
+// ============================================================
+// LOG FORM
+// ============================================================
+let formHasBooking = false;
+
+function setBooking(val) {
+  formHasBooking = val;
+  document.getElementById('booking-yes').classList.toggle('active', val);
+  document.getElementById('booking-no').classList.toggle('active', !val);
+  document.getElementById('booking-fields').classList.toggle('hidden', !val);
+}
+
+function handleMsgType() {
+  const t = document.getElementById('f-message-type').value;
+  document.getElementById('custom-msg-group').classList.toggle('hidden', t !== 'custom');
+}
+
+function handleLogSubmit(e) {
+  e.preventDefault();
+  addProspect({
+    handle: document.getElementById('f-handle').value.trim(),
+    industry: document.getElementById('f-industry').value,
+    stage: document.getElementById('f-stage').value,
+    dateContacted: document.getElementById('f-date').value,
+    followerCount: parseInt(document.getElementById('f-followers').value) || null,
+    projectValue: parseInt(document.getElementById('f-value').value) || 800,
+    city: document.getElementById('f-city').value.trim(),
+    state: document.getElementById('f-state').value,
+    sourceHashtag: document.getElementById('f-hashtag').value.replace('#','').trim(),
+    nextActionDate: document.getElementById('f-next-action').value,
+    hasBookingTool: formHasBooking,
+    bookingToolName: document.getElementById('f-booking-name').value.trim(),
+    bookingToolUrl: document.getElementById('f-booking-url').value.trim(),
+    messageType: document.getElementById('f-message-type').value,
+    customMessage: document.getElementById('f-custom-msg').value.trim(),
+    initialNote: document.getElementById('f-note').value.trim()
+  });
+  document.getElementById('log-form').reset();
+  document.getElementById('f-date').value = todayStr();
+  document.getElementById('f-value').value = '800';
+  document.getElementById('f-stage').value = '';
+  setBooking(false);
+  document.getElementById('custom-msg-group').classList.add('hidden');
+  updateDmPill();
+  const btn = document.getElementById('log-submit-btn');
+  btn.textContent = '✓ Prospect Added!';
+  btn.style.background = 'var(--success)';
+  setTimeout(() => { btn.textContent = 'Add Prospect'; btn.style.background = ''; }, 2000);
+}
+
+// ============================================================
+// ANALYTICS
+// ============================================================
+function renderAnalytics() {
+  const ps = getAll();
+  const el = document.getElementById('analytics-content');
+
+  if (ps.length === 0) {
+    el.innerHTML = `<div class="empty-state"><span class="empty-emoji">📊</span><div class="empty-title">No data yet</div><div class="empty-desc">Add prospects to see analytics.</div></div>`;
+    return;
+  }
+
+  const ws = weekStart();
+  const lws = new Date(ws); lws.setDate(lws.getDate() - 7);
+
+  function hasDm(p) { return p.stageHistory.some(s => s.stage === 'DM Sent'); }
+  function dmDate(p) { const s = p.stageHistory.find(s => s.stage === 'DM Sent'); return s ? new Date(s.timestamp) : null; }
+  function isReplied(p) { return ['Replied','Pitched','Mockup Requested','Mockup Sent','Negotiating','Closed Won'].includes(p.currentStage); }
+  function isMockupReq(p) { return ['Mockup Requested','Mockup Sent','Negotiating','Closed Won'].includes(p.currentStage); }
+  function isMockupSent(p) { return ['Mockup Sent','Negotiating','Closed Won'].includes(p.currentStage); }
+  function isClosed(p) { return p.currentStage === 'Closed Won'; }
+
+  const dmPs = ps.filter(hasDm);
+  const twPs = dmPs.filter(p => dmDate(p) >= ws);
+  const lwPs = dmPs.filter(p => { const d = dmDate(p); return d >= lws && d < ws; });
+
+  function wkM(arr) {
+    const sent = arr.length;
+    const replied = arr.filter(isReplied).length;
+    const mreq = arr.filter(isMockupReq).length;
+    const msent = arr.filter(isMockupSent).length;
+    const closed = arr.filter(isClosed).length;
+    return {
+      sent, replied, mreq, msent, closed,
+      replyRate: sent ? ((replied/sent)*100).toFixed(1) : '0.0',
+      mockupRate: replied ? ((mreq/replied)*100).toFixed(1) : '0.0',
+      closeRate: msent ? ((closed/msent)*100).toFixed(1) : '0.0'
+    };
+  }
+  const tw = wkM(twPs), lw = wkM(lwPs);
+
+  // Pipeline value
+  const pipelineValue = ps.filter(p => !['Closed Lost','Ghosted'].includes(p.currentStage))
+    .reduce((s,p) => s + (p.projectValue || 0), 0);
+
+  // Avg days to close
+  const closeTimes = ps.filter(isClosed).map(p => {
+    const dm = p.stageHistory.find(s => s.stage === 'DM Sent');
+    const cw = p.stageHistory.find(s => s.stage === 'Closed Won');
+    return dm && cw ? (new Date(cw.timestamp) - new Date(dm.timestamp)) / 86400000 : null;
+  }).filter(Boolean);
+  const avgClose = closeTimes.length ? (closeTimes.reduce((a,b)=>a+b,0)/closeTimes.length).toFixed(1) : null;
+
+  function arrow(a, b) {
+    const av = parseFloat(a), bv = parseFloat(b);
+    if (av > bv) return '<span class="trend-up">↑</span>';
+    if (av < bv) return '<span class="trend-down">↓</span>';
+    return '<span style="color:var(--text-muted)">→</span>';
+  }
+
+  // Hashtag map
+  const hashMap = {};
+  ps.forEach(p => {
+    const h = '#'+(p.sourceHashtag||'none');
+    if (!hashMap[h]) hashMap[h] = {n:0,r:0,m:0,c:0};
+    hashMap[h].n++;
+    if (isReplied(p)) hashMap[h].r++;
+    if (isMockupReq(p)) hashMap[h].m++;
+    if (isClosed(p)) hashMap[h].c++;
+  });
+  const hashRows = Object.entries(hashMap)
+    .map(([h,d]) => ({h, d, rr: d.n ? ((d.r/d.n)*100).toFixed(1):'0.0'}))
+    .sort((a,b) => parseFloat(b.rr) - parseFloat(a.rr));
+
+  // Industry map
+  const indMap = {};
+  ps.forEach(p => {
+    if (!indMap[p.industry]) indMap[p.industry] = {n:0,r:0,m:0,c:0};
+    indMap[p.industry].n++;
+    if (isReplied(p)) indMap[p.industry].r++;
+    if (isMockupReq(p)) indMap[p.industry].m++;
+    if (isClosed(p)) indMap[p.industry].c++;
+  });
+
+  // Follower ranges
+  const fRanges = [
+    {label:'Under 1k', min:0, max:999},
+    {label:'1k – 5k', min:1000, max:4999},
+    {label:'5k – 20k', min:5000, max:19999},
+    {label:'20k+', min:20000, max:Infinity}
+  ].map(r => {
+    const rps = ps.filter(p => p.followerCount != null && p.followerCount >= r.min && p.followerCount <= r.max);
+    const rep = rps.filter(isReplied).length, cl = rps.filter(isClosed).length;
+    return { ...r, count:rps.length, rep, cl,
+      rr: rps.length ? ((rep/rps.length)*100).toFixed(1) : '—',
+      cr: rep ? ((cl/rep)*100).toFixed(1) : '—'
+    };
+  });
+
+  // Day of week
+  const dowDms = Array(7).fill(0), dowRep = Array(7).fill(0);
+  ps.forEach(p => {
+    const dm = p.stageHistory.find(s => s.stage === 'DM Sent');
+    if (dm) {
+      const dow = new Date(dm.timestamp).getDay();
+      dowDms[dow]++;
+      if (isReplied(p)) dowRep[dow]++;
+    }
+  });
+  const maxDow = Math.max(...dowDms, 1);
+  const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+  // Stage ages
+  const stageAges = {};
+  ps.forEach(p => {
+    for (let i = 0; i < p.stageHistory.length; i++) {
+      const s = p.stageHistory[i];
+      const end = i+1 < p.stageHistory.length ? new Date(p.stageHistory[i+1].timestamp) : new Date();
+      const days = (end - new Date(s.timestamp)) / 86400000;
+      if (!stageAges[s.stage]) stageAges[s.stage] = [];
+      stageAges[s.stage].push(days);
+    }
+  });
+
+  // Funnel
+  const sCounts = {};
+  STAGES.forEach(s => sCounts[s] = 0);
+  ps.forEach(p => { if (sCounts[p.currentStage] !== undefined) sCounts[p.currentStage]++; });
+  const fTotal = ps.length || 1;
+
+  function rateColor(v) {
+    const n = parseFloat(v);
+    return isNaN(n) ? 'var(--text-muted)' : n > 20 ? 'var(--success)' : n > 10 ? 'var(--warning)' : 'var(--text-muted)';
+  }
+
+  el.innerHTML = `
+    <!-- KPI Cards -->
+    <div class="stats-grid">
+      ${kpi('DMs Sent This Week', tw.sent, 'DMs with DM Sent stage')}
+      ${kpi('Reply Rate', tw.replyRate+'%', 'replies ÷ DMs sent', 'c-success')}
+      ${kpi('Mockup Rate', tw.mockupRate+'%', 'mockup req ÷ replies', 'c-accent')}
+      ${kpi('Close Rate', tw.closeRate+'%', 'won ÷ mockups sent', 'c-success')}
+      ${kpi('Avg Days to Close', avgClose !== null ? avgClose+'d' : '—', 'DM Sent → Closed Won', 'c-warning')}
+      ${kpi('Pipeline Value', '$'+pipelineValue.toLocaleString(), 'excl. Lost & Ghosted', 'c-success')}
+    </div>
+
+    <!-- Week compare -->
+    <div class="card mb-4">
+      <div class="section-title mb-4" style="margin-top:0">This Week vs Last Week</div>
+      <div style="overflow-x:auto">
+        <table class="tbl">
+          <thead><tr><th>Metric</th><th>This Week</th><th>Last Week</th><th>Trend</th></tr></thead>
+          <tbody>
+            ${[['DMs Sent','sent','sent'],['Reply Rate','replyRate','replyRate'],['Mockup Rate','mockupRate','mockupRate'],['Close Rate','closeRate','closeRate']]
+              .map(([l,tk,lk]) => `<tr>
+                <td>${l}</td>
+                <td class="text-accent fw-700">${tw[tk]}</td>
+                <td class="text-muted">${lw[lk]}</td>
+                <td>${arrow(tw[tk],lw[lk])}</td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Best hashtag -->
+    <div class="card mb-4">
+      <div class="section-title mb-4" style="margin-top:0">Best Performing Hashtag</div>
+      <div style="overflow-x:auto">
+        <table class="tbl">
+          <thead><tr><th>Hashtag</th><th>Prospects</th><th>Replies</th><th>Mockups</th><th>Closed</th><th>Reply Rate</th></tr></thead>
+          <tbody>
+            ${hashRows.map(({h,d,rr}) => `<tr>
+              <td style="color:var(--accent-light)">${h}</td>
+              <td>${d.n}</td><td>${d.r}</td><td>${d.m}</td><td>${d.c}</td>
+              <td style="color:${rateColor(rr)}">${rr}%</td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Day of week -->
+    <div class="card mb-4">
+      <div class="section-title mb-4" style="margin-top:0">Best Day of Week</div>
+      <div style="display:flex;align-items:flex-end;gap:6px;height:100px;padding:4px 0">
+        ${DAYS.map((day,i) => {
+          const dh = dowDms[i] > 0 ? Math.max((dowDms[i]/maxDow)*76,4) : 2;
+          const rh = dowDms[i] > 0 ? Math.max((dowRep[i]/dowDms[i])*76,4) : 2;
+          return `<div style="display:flex;flex-direction:column;align-items:center;flex:1">
+            <div style="display:flex;gap:2px;align-items:flex-end;height:80px">
+              <div style="width:12px;background:rgba(124,92,191,.6);border-radius:3px 3px 0 0;height:${dh}px" title="${dowDms[i]} DMs"></div>
+              <div style="width:12px;background:rgba(34,197,94,.7);border-radius:3px 3px 0 0;height:${rh}px" title="${dowRep[i]} replies"></div>
+            </div>
+            <div style="font-size:.6rem;color:var(--text-muted);margin-top:3px;font-weight:700">${day}</div>
+          </div>`;
+        }).join('')}
+      </div>
+      <div style="display:flex;gap:var(--space-4);margin-top:var(--space-3);font-size:var(--font-xs);color:var(--text-muted)">
+        <span><span style="display:inline-block;width:10px;height:10px;background:rgba(124,92,191,.6);border-radius:2px;margin-right:4px"></span>DMs Sent</span>
+        <span><span style="display:inline-block;width:10px;height:10px;background:rgba(34,197,94,.7);border-radius:2px;margin-right:4px"></span>Reply Rate</span>
+      </div>
+    </div>
+
+    <!-- Industry -->
+    <div class="card mb-4">
+      <div class="section-title mb-4" style="margin-top:0">Industry Conversion</div>
+      <div style="overflow-x:auto">
+        <table class="tbl">
+          <thead><tr><th>Industry</th><th>Contacted</th><th>Replied</th><th>Mockup Req</th><th>Closed</th><th>Reply %</th><th>Close %</th></tr></thead>
+          <tbody>
+            ${Object.entries(indMap).sort((a,b)=>b[1].n-a[1].n).map(([ind,d])=>{
+              const rr = d.n ? ((d.r/d.n)*100).toFixed(1):'0.0';
+              const cr = d.r ? ((d.c/d.r)*100).toFixed(1):'0.0';
+              return `<tr>
+                <td>${industryPill(ind)}</td>
+                <td>${d.n}</td><td>${d.r}</td><td>${d.m}</td>
+                <td class="text-success fw-700">${d.c}</td>
+                <td style="color:${rateColor(rr)}">${rr}%</td>
+                <td style="color:${parseFloat(cr)>30?'var(--success)':parseFloat(cr)>10?'var(--warning)':'var(--text-muted)'}">${cr}%</td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Follower ranges -->
+    <div class="card mb-4">
+      <div class="section-title mb-4" style="margin-top:0">Follower Range Breakdown</div>
+      <div style="overflow-x:auto">
+        <table class="tbl">
+          <thead><tr><th>Range</th><th>Prospects</th><th>Replied</th><th>Reply Rate</th><th>Close Rate</th></tr></thead>
+          <tbody>
+            ${fRanges.map(r=>`<tr>
+              <td>${r.label}</td><td>${r.count}</td><td>${r.rep}</td>
+              <td style="color:${rateColor(r.rr)}">${r.rr !== '—' ? r.rr+'%' : '—'}</td>
+              <td style="color:${parseFloat(r.cr)>30?'var(--success)':parseFloat(r.cr)>10?'var(--warning)':'var(--text-muted)'}">${r.cr !== '—' ? r.cr+'%' : '—'}</td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Funnel -->
+    <div class="card mb-4">
+      <div class="section-title mb-4" style="margin-top:0">Pipeline Funnel</div>
+      ${STAGES.map(stage=>{
+        const n = sCounts[stage]||0;
+        const pct = Math.round((n/fTotal)*100);
+        const w = n > 0 ? Math.max(pct,4) : 0;
+        const col = STAGE_COLOR[stage];
+        return `<div class="funnel-row">
+          <div class="funnel-label">${stage}</div>
+          <div class="funnel-bar-wrap">
+            <div class="funnel-bar" style="width:${w}%;background:${col}22;border-left:3px solid ${col}">
+              <span class="funnel-bar-text" style="color:${col}">${n>0?pct+'%':''}</span>
+            </div>
+          </div>
+          <div class="funnel-count">${n}</div>
+        </div>`;
+      }).join('')}
+    </div>
+
+    <!-- Pipeline age -->
+    <div class="card mb-4">
+      <div class="section-title mb-4" style="margin-top:0">Pipeline Age (avg days per stage)</div>
+      <div style="overflow-x:auto">
+        <table class="tbl">
+          <thead><tr><th>Stage</th><th>Avg Days</th><th>Records</th></tr></thead>
+          <tbody>
+            ${STAGES.map(stage=>{
+              const ages = stageAges[stage]||[];
+              const avg = ages.length ? (ages.reduce((a,b)=>a+b,0)/ages.length).toFixed(1) : null;
+              const hot = avg && parseFloat(avg) > 3;
+              return `<tr>
+                <td>${stage}</td>
+                <td style="color:${hot?'var(--danger)':'var(--text)'};font-weight:${hot?700:400}">${avg !== null ? avg+'d' : '—'}${hot?' ⚠️':''}</td>
+                <td class="text-muted">${ages.length}</td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>`;
+}
+
+function kpi(label, value, sub, cls='') {
+  return `<div class="stat-card">
+    <div class="stat-label">${label}</div>
+    <div class="stat-value ${cls}">${value}</div>
+    <div class="stat-sub">${sub}</div>
+  </div>`;
+}
+
+// ============================================================
+// SETTINGS PAGE
+// ============================================================
+function renderSettingsPage() {
+  const s = getSettings();
+  document.getElementById('s-dm-target').value = s.dailyTarget;
+  document.getElementById('s-followup-hours').value = s.followUpHours;
+}
+
+// ============================================================
+// EXPORT / IMPORT
+// ============================================================
+function exportCSV() {
+  const ps = getAll();
+  const headers = ['Handle','Industry','Stage','City','State','Followers','ProjectValue','SourceHashtag','HasBookingTool','BookingTool','DateContacted','NextActionDate','DaysInStage','CreatedAt'];
+  const rows = ps.map(p => [
+    p.handle, p.industry, p.currentStage, p.city||'', p.state||'',
+    p.followerCount||'', p.projectValue||'', p.sourceHashtag||'',
+    p.hasBookingTool?'Yes':'No', p.bookingToolName||'',
+    p.dateContacted||'', p.nextActionDate||'', daysInStage(p), p.createdAt
+  ].map(v => '"'+String(v).replace(/"/g,'""')+'"').join(','));
+  dlFile([headers.join(','), ...rows].join('\n'), 'jx-outreach-'+todayStr()+'.csv', 'text/csv');
+}
+
+function exportJSON() {
+  dlFile(JSON.stringify({prospects:getAll(),settings:getSettings(),exported:new Date().toISOString()},null,2),
+    'jx-outreach-backup-'+todayStr()+'.json','application/json');
+}
+
+function importJSON(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      const ps = data.prospects || (Array.isArray(data) ? data : null);
+      if (!ps) throw new Error('Invalid format — expected { prospects: [...] }');
+      if (!confirm(`Import ${ps.length} prospects? This replaces ALL current data.`)) return;
+      saveAll(ps);
+      if (data.settings) localStorage.setItem(SETTINGS_KEY, JSON.stringify(data.settings));
+      alert('Import successful!');
+      renderSettingsPage();
+      updateDmPill();
+    } catch(err) { alert('Import failed: ' + err.message); }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+}
+
+function clearAllData() {
+  if (!confirm('Delete ALL prospects and data? This cannot be undone.')) return;
+  if (!confirm('Last chance — permanently delete everything?')) return;
+  localStorage.removeItem(STORAGE_KEY);
+  updateDmPill();
+  navigateTo('today');
+  alert('All data cleared.');
+}
+
+function dlFile(content, filename, type) {
+  const blob = new Blob([content], {type});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename; a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ============================================================
+// INIT
+// ============================================================
+function init() {
+  // Stage dropdowns
+  ['f-stage','qm-stage','bulk-stage'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    STAGES.forEach(s => {
+      const o = document.createElement('option');
+      o.value = s; o.textContent = s; el.appendChild(o);
+    });
+  });
+
+  // US States
+  const sfEl = document.getElementById('f-state');
+  US_STATES.forEach(s => {
+    const o = document.createElement('option'); o.value = s; o.textContent = s; sfEl.appendChild(o);
+  });
+
+  // Defaults
+  document.getElementById('f-date').value = todayStr();
+  document.getElementById('f-value').value = '800';
+
+  updateDmPill();
+  renderToday();
+}
+
+init();
+</script>
+</body>
+</html>
