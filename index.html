@@ -46,6 +46,17 @@ body{min-height:100%;background:var(--bg);color:var(--text);font-family:-apple-s
 .dm-pill.gray{background:rgba(136,136,168,.13);border:1px solid rgba(136,136,168,.25);color:var(--text-muted)}
 .dm-pill.amber{background:rgba(245,158,11,.13);border:1px solid rgba(245,158,11,.3);color:var(--warning)}
 .dm-pill.green{background:rgba(34,197,94,.13);border:1px solid rgba(34,197,94,.3);color:var(--success)}
+.daily-pill-row{display:flex;align-items:center;gap:var(--space-2);flex-wrap:wrap;justify-content:flex-end}
+.channel-selector{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-3);margin-bottom:var(--space-5)}
+.channel-btn{min-height:58px;border:1.5px solid var(--border);border-radius:var(--radius-lg);background:var(--surface-2);color:var(--text-muted);font-size:var(--font-lg);font-weight:800;cursor:pointer;transition:all var(--dur-fast)}
+.channel-btn.active{border-color:var(--accent);background:rgba(124,92,191,.18);color:var(--accent-light);box-shadow:0 2px 12px rgba(124,92,191,.18)}
+.channel-pill{display:inline-flex;align-items:center;padding:2px 9px;border-radius:var(--radius-full);font-size:var(--font-xs);font-weight:700;background:rgba(59,130,246,.13);color:#60a5fa;white-space:nowrap}
+.channel-pill.call{background:rgba(45,212,191,.13);color:#2dd4bf}
+.match-status{font-size:var(--font-xs);color:var(--text-muted);margin-top:6px}
+.match-status.good{color:var(--success)}
+.match-status.bad{color:var(--danger)}
+.checkbox-line{display:flex;align-items:center;gap:var(--space-2);font-size:var(--font-sm);font-weight:600;color:var(--text)}
+.checkbox-line input{width:18px;height:18px;accent-color:var(--accent)}
 
 #bottom-nav{position:fixed;bottom:0;left:0;right:0;height:var(--nav-h);background:var(--surface);border-top:1px solid var(--border);display:flex;z-index:100;padding-bottom:env(safe-area-inset-bottom)}
 .bnav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;color:var(--text-muted);font-size:.68rem;font-weight:600;transition:color var(--dur-fast) ease;border:none;background:none;min-height:44px}
@@ -259,7 +270,7 @@ mark{background:rgba(245,158,11,.25);color:inherit;border-radius:2px;padding:0 1
   <div class="login-card">
     <div class="login-title">JX Outreach Tracker</div>
     <div class="login-subtitle">Sign in to sync your data across devices</div>
-    <button class="btn-google" onclick="signInWithGoogle()">
+    <button class="btn-google" id="google-signin-btn" onclick="signInWithGoogle()">
       <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z" fill="#fff" fill-opacity=".9"/><path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z" fill="#fff" fill-opacity=".7"/><path d="M3.964 10.71A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#fff" fill-opacity=".5"/><path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z" fill="#fff" fill-opacity=".8"/></svg>
       Sign in with Google
     </button>
@@ -287,8 +298,9 @@ mark{background:rgba(245,158,11,.25);color:inherit;border-radius:2px;padding:0 1
 
     <div class="top-bar">
       <span class="top-bar-title" id="page-title">Today</span>
-      <div style="display:flex;align-items:center;gap:var(--space-3)">
-        <span class="dm-pill gray" id="dm-pill">Today: 0 / 20 DMs</span>
+      <div class="daily-pill-row">
+        <span class="dm-pill gray" id="dm-pill">0 / 35 DMs</span>
+        <span class="dm-pill gray" id="call-pill">0 / 15 Calls</span>
         <div id="user-info" style="display:none">
           <img id="user-avatar" src="" alt="avatar" onerror="this.style.display='none'">
           <span id="user-name"></span>
@@ -311,15 +323,17 @@ mark{background:rgba(245,158,11,.25);color:inherit;border-radius:2px;padding:0 1
     <!-- PROSPECTS -->
     <div class="page" id="page-prospects">
       <div style="display:flex;gap:var(--space-2);margin-bottom:var(--space-3);align-items:center">
-        <input class="form-input" id="p-search" placeholder="🔍 Search handle, city, hashtag, notes..." oninput="renderProspects()" style="min-height:44px;flex:1">
+        <input class="form-input" id="p-search" placeholder="🔍 Search handle, name, phone, city, notes..." oninput="renderProspects()" style="min-height:44px;flex:1">
         <button class="btn btn-secondary btn-sm" id="select-btn" onclick="toggleSelectMode()" style="white-space:nowrap;flex-shrink:0">Select</button>
       </div>
       <div style="display:flex;gap:var(--space-2);margin-bottom:var(--space-4);overflow-x:auto;padding-bottom:4px">
         <select class="form-select" id="p-filter-stage" onchange="renderProspects()" style="min-height:40px;font-size:var(--font-sm);min-width:140px">
           <option value="">All Stages</option>
         </select>
-        <select class="form-select" id="p-filter-industry" onchange="renderProspects()" style="min-height:40px;font-size:var(--font-sm);min-width:130px">
-          <option value="">All Industries</option>
+        <select class="form-select" id="p-filter-channel" onchange="renderProspects()" style="min-height:40px;font-size:var(--font-sm);min-width:130px">
+          <option value="">All Channels</option>
+          <option value="dm">DM</option>
+          <option value="call">Call</option>
         </select>
         <select class="form-select" id="p-sort" onchange="renderProspects()" style="min-height:40px;font-size:var(--font-sm);min-width:130px">
           <option value="date-desc">Newest First</option>
@@ -334,50 +348,57 @@ mark{background:rgba(245,158,11,.25);color:inherit;border-radius:2px;padding:0 1
 
     <!-- LOG -->
     <div class="page" id="page-log">
-      <div class="card">
-        <h2 style="font-size:var(--font-xl);font-weight:700;margin-bottom:var(--space-5)">Add New Prospect</h2>
-        <form id="log-form" onsubmit="handleLogSubmit(event)">
-          <div class="form-row">
-            <div class="form-group">
-              <label class="form-label">Instagram Handle *</label>
-              <div class="input-prefix"><span class="prefix">@</span><input class="form-input" id="f-handle" placeholder="username" required></div>
+      <div class="card mb-4">
+        <h2 style="font-size:var(--font-xl);font-weight:700;margin-bottom:var(--space-5)">Add Prospect</h2>
+        <form id="add-prospect-form" onsubmit="handleAddProspectSubmit(event)">
+          <div class="channel-selector">
+            <button type="button" class="channel-btn active" id="add-channel-dm" onclick="setAddChannel('dm')">DM</button>
+            <button type="button" class="channel-btn" id="add-channel-call" onclick="setAddChannel('call')">Call</button>
+          </div>
+
+          <div id="add-dm-fields">
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Instagram Handle *</label>
+                <div class="input-prefix"><span class="prefix">@</span><input class="form-input" id="ad-handle" placeholder="username"></div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Follower Count</label>
+                <input class="form-input" type="number" id="ad-followers" placeholder="e.g. 2500" min="0">
+              </div>
             </div>
             <div class="form-group">
-              <label class="form-label">Industry *</label>
-              <select class="form-select" id="f-industry" required>
-                <option value="">Select...</option>
-                <option>Barbershop</option><option>Hair Salon</option><option>Nail Salon</option>
-                <option>Tattoo Studio</option><option>Spa / Wellness</option><option>Lash / Brow Studio</option>
-                <option>Gym / Fitness</option><option>Yoga Studio</option><option>Personal Trainer</option>
-                <option>Restaurant</option><option>Cafe / Coffee Shop</option><option>Food Truck</option>
-                <option>Real Estate Agent</option><option>Mortgage Broker</option><option>Insurance Agent</option>
-                <option>Chiropractor</option><option>Dentist</option><option>Med Spa</option>
-                <option>Photographer</option><option>Videographer</option><option>DJ / Entertainer</option>
-                <option>Contractor / Trades</option><option>Cleaning Service</option><option>Landscaping</option>
-                <option>Boutique / Retail</option><option>Other</option>
-              </select>
+              <label class="form-label">Has Booking Tool?</label>
+              <div class="toggle-group">
+                <button type="button" class="toggle-btn active" id="booking-no" onclick="setBooking(false)">No</button>
+                <button type="button" class="toggle-btn" id="booking-yes" onclick="setBooking(true)">Yes</button>
+              </div>
+            </div>
+            <div id="booking-fields" class="hidden">
+              <div class="form-group">
+                <label class="form-label">Booking Tool Name</label>
+                <input class="form-input" id="ad-booking-name" placeholder="e.g. Booksy, Calendly">
+              </div>
             </div>
           </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label class="form-label">Stage *</label>
-              <select class="form-select" id="f-stage" required><option value="">Select...</option></select>
+
+          <div id="add-call-fields" class="hidden">
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Full Name *</label>
+                <input class="form-input" id="ac-full-name" placeholder="Jane Smith">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Business Name</label>
+                <input class="form-input" id="ac-business-name" placeholder="Smith Studio">
+              </div>
             </div>
             <div class="form-group">
-              <label class="form-label">Date Contacted *</label>
-              <input class="form-input" type="date" id="f-date" required>
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label class="form-label">Follower Count</label>
-              <input class="form-input" type="number" id="f-followers" placeholder="e.g. 2500" min="0">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Project Value ($)</label>
-              <input class="form-input" type="number" id="f-value" value="800" min="0">
+              <label class="form-label">Phone Number *</label>
+              <input class="form-input" id="ac-phone" placeholder="555-123-4567">
             </div>
           </div>
+
           <div class="form-row">
             <div class="form-group">
               <label class="form-label">City</label>
@@ -385,13 +406,13 @@ mark{background:rgba(245,158,11,.25);color:inherit;border-radius:2px;padding:0 1
             </div>
             <div class="form-group">
               <label class="form-label">State</label>
-              <select class="form-select" id="f-state"><option value="">Select state...</option></select>
+              <select class="form-select state-select" id="f-state"><option value="">Select state...</option></select>
             </div>
           </div>
           <div class="form-row">
             <div class="form-group">
-              <label class="form-label">Source Hashtag</label>
-              <div class="input-prefix"><span class="prefix">#</span><input class="form-input" id="f-hashtag" placeholder="austinbarbershop"></div>
+              <label class="form-label">Project Value ($)</label>
+              <input class="form-input" type="number" id="f-value" value="800" min="0">
             </div>
             <div class="form-group">
               <label class="form-label">Next Action Date</label>
@@ -399,41 +420,85 @@ mark{background:rgba(245,158,11,.25);color:inherit;border-radius:2px;padding:0 1
             </div>
           </div>
           <div class="form-group">
-            <label class="form-label">Has Booking Tool?</label>
-            <div class="toggle-group">
-              <button type="button" class="toggle-btn active" id="booking-no" onclick="setBooking(false)">No</button>
-              <button type="button" class="toggle-btn" id="booking-yes" onclick="setBooking(true)">Yes</button>
-            </div>
+            <label class="form-label">Note</label>
+            <textarea class="form-textarea" id="f-note" placeholder="Any notes..." style="min-height:70px"></textarea>
           </div>
-          <div id="booking-fields" class="hidden">
+          <button class="btn btn-primary" type="submit" id="add-submit-btn">Add Prospect</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <h2 style="font-size:var(--font-xl);font-weight:700;margin-bottom:var(--space-5)">Log Outreach</h2>
+        <form id="outreach-form" onsubmit="handleOutreachSubmit(event)">
+          <div class="channel-selector">
+            <button type="button" class="channel-btn active" id="outreach-channel-dm" onclick="setOutreachChannel('dm')">DM</button>
+            <button type="button" class="channel-btn" id="outreach-channel-call" onclick="setOutreachChannel('call')">Call</button>
+          </div>
+
+          <div id="outreach-dm-fields">
+            <div class="form-group">
+              <label class="form-label">Instagram Handle *</label>
+              <div class="input-prefix"><span class="prefix">@</span><input class="form-input" id="lo-dm-search" placeholder="username" oninput="updateOutreachMatch()"></div>
+              <div class="match-status" id="lo-dm-match">Type a handle to find an existing prospect.</div>
+            </div>
             <div class="form-row">
               <div class="form-group">
-                <label class="form-label">Booking Tool Name</label>
-                <input class="form-input" id="f-booking-name" placeholder="e.g. Booksy, Calendly">
+                <label class="form-label">DM Stage</label>
+                <select class="form-select" id="lo-dm-stage"></select>
               </div>
               <div class="form-group">
-                <label class="form-label">Booking URL</label>
-                <input class="form-input" id="f-booking-url" placeholder="https://...">
+                <label class="form-label">DM Log Type</label>
+                <select class="form-select" id="lo-dm-type"></select>
               </div>
             </div>
+            <div class="form-group">
+              <label class="checkbox-line"><input type="checkbox" id="lo-pre-engaged"> Followed + liked + commented</label>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Note</label>
+              <textarea class="form-textarea" id="lo-dm-note" placeholder="What happened?"></textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Next Action Date</label>
+              <input class="form-input" type="date" id="lo-dm-next-action">
+            </div>
           </div>
-          <div class="form-group">
-            <label class="form-label">Initial Message Type</label>
-            <select class="form-select" id="f-message-type" onchange="handleMsgType()">
-              <option value="compliment">Compliment Opener</option>
-              <option value="question">Question Opener</option>
-              <option value="custom">Custom</option>
-            </select>
+
+          <div id="outreach-call-fields" class="hidden">
+            <div class="form-group">
+              <label class="form-label">Name or Phone Number *</label>
+              <input class="form-input" id="lo-call-search" placeholder="Jane Smith or 555-123-4567" oninput="updateOutreachMatch()">
+              <div class="match-status" id="lo-call-match">Type a name or phone number to find an existing prospect.</div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Call Status</label>
+                <select class="form-select" id="lo-call-status"></select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Call Log Type</label>
+                <select class="form-select" id="lo-call-type"></select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Attempt Number</label>
+              <div class="toggle-group">
+                <button type="button" class="toggle-btn active" id="attempt-1" onclick="setAttemptNumber(1)">1</button>
+                <button type="button" class="toggle-btn" id="attempt-2" onclick="setAttemptNumber(2)">2</button>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Note</label>
+              <textarea class="form-textarea" id="lo-call-note" placeholder="What happened?"></textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Next Action Date</label>
+              <input class="form-input" type="date" id="lo-call-next-action">
+            </div>
           </div>
-          <div class="form-group hidden" id="custom-msg-group">
-            <label class="form-label">Custom Message</label>
-            <textarea class="form-textarea" id="f-custom-msg" placeholder="Paste your message..."></textarea>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Opening Note (optional)</label>
-            <textarea class="form-textarea" id="f-note" placeholder="Any initial notes..." style="min-height:70px"></textarea>
-          </div>
-          <button class="btn btn-primary" type="submit" id="log-submit-btn">Add Prospect</button>
+
+          <input type="hidden" id="lo-prospect-id">
+          <button class="btn btn-primary" type="submit" id="outreach-submit-btn">Log Outreach</button>
         </form>
       </div>
     </div>
@@ -454,12 +519,17 @@ mark{background:rgba(245,158,11,.25);color:inherit;border-radius:2px;padding:0 1
         <div class="form-group">
           <label class="form-label">Daily DM Target</label>
           <input class="form-input" type="number" id="s-dm-target" min="1" max="200" onchange="saveSettingsFields()">
-          <div class="form-hint">Number of DMs to send per day (shown in top pill)</div>
+          <div class="form-hint">Number of DMs to send per day</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Daily Call Target</label>
+          <input class="form-input" type="number" id="s-call-target" min="1" max="200" onchange="saveSettingsFields()">
+          <div class="form-hint">Number of calls to make per day</div>
         </div>
         <div class="form-group">
           <label class="form-label">Follow-up Threshold (hours)</label>
           <input class="form-input" type="number" id="s-followup-hours" min="1" max="720" onchange="saveSettingsFields()">
-          <div class="form-hint">Prospects in DM Sent / Seen No Reply for this long appear in "Going Cold"</div>
+          <div class="form-hint">Prospects waiting this long appear in "Going Cold"</div>
         </div>
       </div>
       <div class="card mb-4">
@@ -490,7 +560,7 @@ mark{background:rgba(245,158,11,.25);color:inherit;border-radius:2px;padding:0 1
 
 <!-- Bulk select bar -->
 <div class="select-mode-bar" id="bulk-bar">
-  <select class="form-select" id="bulk-stage" style="min-height:40px;font-size:var(--font-sm);flex:1"><option value="">Move to stage...</option></select>
+  <select class="form-select" id="bulk-stage" style="min-height:40px;font-size:var(--font-sm);flex:1"><option value="">Move to status...</option></select>
   <button class="btn btn-primary" style="min-height:40px;min-width:130px;font-size:var(--font-sm)" onclick="applyBulkStage()">Update Selected</button>
 </div>
 
@@ -501,7 +571,7 @@ mark{background:rgba(245,158,11,.25);color:inherit;border-radius:2px;padding:0 1
     <button class="modal-close" onclick="closeModal('quick-modal')">✕</button>
     <div class="modal-title" id="qm-title">Update Stage</div>
     <div class="form-group">
-      <label class="form-label">New Stage</label>
+      <label class="form-label">New Status</label>
       <select class="form-select" id="qm-stage"></select>
     </div>
     <div class="form-group">
@@ -558,7 +628,7 @@ mark{background:rgba(245,158,11,.25);color:inherit;border-radius:2px;padding:0 1
   <div class="detail-topbar">
     <button class="btn btn-secondary btn-sm" onclick="closeDetail()">← Back</button>
     <span style="font-weight:700;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin:0 var(--space-2)" id="detail-title"></span>
-    <button class="btn btn-secondary btn-sm" onclick="openQuickModal(currentDetailId)">Update Stage</button>
+    <button class="btn btn-secondary btn-sm" onclick="openQuickModal(currentDetailId)">Update Status</button>
   </div>
   <div class="detail-body" id="detail-body"></div>
 </div>
@@ -594,42 +664,57 @@ db.enablePersistence({ synchronizeTabs: true })
 const STORAGE_KEY = 'jx_prospects'; // kept only for migration check
 const SETTINGS_KEY = 'jx_settings';
 
-const STAGES = [
-  'Researched','Engaged','DM Sent','Seen No Reply','Replied',
-  'Pitched','Mockup Requested','Mockup Sent','Negotiating',
-  'Closed Won','Closed Lost','Ghosted'
+const DM_STAGES = [
+  'New DM Prospect','M1 Sent','M2 Sent','M3 Sent','M4 Sent','M5a Sent',
+  'Video Sent','Follow-Up Sent','Negotiating','Call Booked','Closed Won','Closed Lost'
 ];
 
-const STAGE_CLASS = {
-  'Researched':'s-researched','Engaged':'s-engaged','DM Sent':'s-dm-sent',
-  'Seen No Reply':'s-seen-no-reply','Replied':'s-replied','Pitched':'s-pitched',
-  'Mockup Requested':'s-mockup-requested','Mockup Sent':'s-mockup-sent',
-  'Negotiating':'s-negotiating','Closed Won':'s-closed-won',
-  'Closed Lost':'s-closed-lost','Ghosted':'s-ghosted'
-};
+const CALL_STATUSES = [
+  'New Call Prospect','No Answer','Voicemail Left','Spoke — Not Interested',
+  'Spoke — Follow Up','Call Booked','Closed Won','Closed Lost'
+];
 
-const STAGE_COLOR = {
-  'Researched':'#9090b0','Engaged':'#7dd3fc','DM Sent':'#60a5fa',
-  'Seen No Reply':'#fbbf24','Replied':'#a78bfa','Pitched':'#fb923c',
-  'Mockup Requested':'#f472b6','Mockup Sent':'#f59e0b',
-  'Negotiating':'#2dd4bf','Closed Won':'#22c55e',
-  'Closed Lost':'#f87171','Ghosted':'#9ca3af'
+const DM_LOG_TYPES = [
+  'Sent opener','They replied','Sent mockup video','Sent link','Had call','Ghosted','Other'
+];
+
+const CALL_LOG_TYPES = [
+  'Called — No Answer','Left Voicemail','Spoke — Not Interested',
+  'Spoke — Following Up','Call Booked','Other'
+];
+
+const STAGES = DM_STAGES;
+
+const STATUS_COLOR = {
+  'New DM Prospect':'#9090b0','M1 Sent':'#60a5fa','M2 Sent':'#60a5fa',
+  'M3 Sent':'#60a5fa','M4 Sent':'#60a5fa','M5a Sent':'#60a5fa',
+  'Video Sent':'#f59e0b','Follow-Up Sent':'#fbbf24','Negotiating':'#2dd4bf',
+  'New Call Prospect':'#9090b0','No Answer':'#fbbf24','Voicemail Left':'#a78bfa',
+  'Spoke — Not Interested':'#f87171','Spoke — Follow Up':'#2dd4bf',
+  'Call Booked':'#22c55e','Closed Won':'#22c55e','Closed Lost':'#f87171'
 };
 
 const LOG_ICON = {
-  'sent-opener':'📤','they-replied':'💬','sent-pitch':'📝',
-  'sent-mockup':'🎨','had-call':'📞','stage-change':'🔄','other':'📌'
+  'sent-opener':'Send','they-replied':'Reply','sent-mockup-video':'Video',
+  'sent-link':'Link','had-call':'Call','ghosted':'Ghost','called-no-answer':'Call',
+  'left-voicemail':'VM','spoke-not-interested':'No','spoke-following-up':'Follow',
+  'call-booked':'Book','prospect-added':'+','stage-change':'Update','other':'Note'
 };
 const LOG_DOT = {
-  'sent-opener':'type-sent','they-replied':'type-reply',
-  'sent-pitch':'type-sent','sent-mockup':'type-sent',
-  'had-call':'type-reply','stage-change':'type-stage','other':''
+  'sent-opener':'type-sent','they-replied':'type-reply','sent-mockup-video':'type-sent',
+  'sent-link':'type-sent','had-call':'type-reply','ghosted':'',
+  'called-no-answer':'type-sent','left-voicemail':'type-sent',
+  'spoke-not-interested':'type-reply','spoke-following-up':'type-reply',
+  'call-booked':'type-reply','stage-change':'type-stage','prospect-added':'type-stage','other':''
 };
 
 const OLD_STAGE_MAP = {
-  'No reply':'DM Sent','Seen no reply':'Seen No Reply',
-  'Followed up':'DM Sent','Not interested':'Closed Lost',
-  'Interested in mockup':'Mockup Requested','Mockup sent':'Mockup Sent',
+  'Researched':'New DM Prospect','Engaged':'New DM Prospect',
+  'DM Sent':'M1 Sent','Seen No Reply':'Follow-Up Sent','Replied':'M1 Sent',
+  'Pitched':'M2 Sent','Mockup Requested':'Video Sent','Mockup Sent':'Video Sent',
+  'Ghosted':'Closed Lost','No reply':'M1 Sent','Seen no reply':'Follow-Up Sent',
+  'Followed up':'Follow-Up Sent','Not interested':'Closed Lost',
+  'Interested in mockup':'Video Sent','Mockup sent':'Video Sent',
   'Closed':'Closed Won','Lost after mockup':'Closed Lost'
 };
 
@@ -650,14 +735,32 @@ let selectMode = false;
 let selectedIds = new Set();
 let unsubscribeSnapshot = null;
 let appInitialized = false;
+let signInInProgress = false;
 
 // ============================================================
 // AUTH
 // ============================================================
 function signInWithGoogle() {
+  if (signInInProgress) return;
+  signInInProgress = true;
+  const btn = document.getElementById('google-signin-btn');
+  if (btn) {
+    btn.disabled = true;
+    btn.style.opacity = '.75';
+  }
   const provider = new firebase.auth.GoogleAuthProvider();
   auth.signInWithPopup(provider).catch(err => {
     console.error('Sign-in failed:', err);
+    if (['auth/cancelled-popup-request','auth/popup-blocked','auth/popup-closed-by-user'].includes(err.code)) {
+      auth.signInWithRedirect(provider).catch(redirectErr => {
+        signInInProgress = false;
+        if (btn) { btn.disabled = false; btn.style.opacity = ''; }
+        alert('Sign in failed: ' + redirectErr.message);
+      });
+      return;
+    }
+    signInInProgress = false;
+    if (btn) { btn.disabled = false; btn.style.opacity = ''; }
     alert('Sign in failed: ' + err.message);
   });
 }
@@ -699,6 +802,14 @@ auth.onAuthStateChanged(async user => {
     if (unsubscribeSnapshot) { unsubscribeSnapshot(); unsubscribeSnapshot = null; }
     prospectsCache = [];
     appInitialized = false;
+  }
+});
+
+// Finalize redirect sign-in if the user was sent back from Google
+auth.getRedirectResult().catch(err => {
+  if (err.code && err.code !== 'auth/no-auth-event') {
+    console.error('Redirect sign-in error:', err);
+    alert('Sign in failed: ' + err.message);
   }
 });
 
@@ -770,7 +881,7 @@ function setupFirestoreListener(userId) {
 }
 
 function refreshCurrentView() {
-  updateDmPill();
+  updateDailyPills();
   const ap = document.querySelector('.page.active');
   if (!ap) return;
   const page = ap.id.replace('page-', '');
@@ -790,15 +901,20 @@ window.addEventListener('offline', () => document.getElementById('offline-banner
 // SETTINGS  (still localStorage — no change needed)
 // ============================================================
 function getSettings() {
-  try { return Object.assign({dailyTarget:20,followUpHours:48}, JSON.parse(localStorage.getItem(SETTINGS_KEY)||'{}')); }
-  catch { return {dailyTarget:20,followUpHours:48}; }
+  try {
+    const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY)||'{}');
+    const dailyDmTarget = parseInt(saved.dailyDmTarget || saved.dailyTarget) || 35;
+    return Object.assign({dailyDmTarget, dailyCallTarget:15, followUpHours:48}, saved, {dailyDmTarget});
+  }
+  catch { return {dailyDmTarget:35,dailyCallTarget:15,followUpHours:48}; }
 }
 function saveSettingsFields() {
   const s = getSettings();
-  s.dailyTarget = parseInt(document.getElementById('s-dm-target').value) || 20;
+  s.dailyDmTarget = parseInt(document.getElementById('s-dm-target').value) || 35;
+  s.dailyCallTarget = parseInt(document.getElementById('s-call-target').value) || 15;
   s.followUpHours = parseInt(document.getElementById('s-followup-hours').value) || 48;
   localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
-  updateDmPill();
+  updateDailyPills();
 }
 
 // ============================================================
@@ -810,10 +926,14 @@ function uid() { return Date.now().toString(36)+Math.random().toString(36).slice
 
 function migrate(p) {
   if (!p.conversationLog) p.conversationLog = [];
+  if (!p.channel) p.channel = 'dm';
+  if (!p.handle) p.handle = '';
+  if (!p.fullName) p.fullName = '';
+  if (!p.businessName) p.businessName = '';
+  if (!p.phoneNumber) p.phoneNumber = '';
   if (p.followerCount === undefined) p.followerCount = null;
   if (p.hasBookingTool === undefined) p.hasBookingTool = false;
   if (!p.bookingToolName) p.bookingToolName = '';
-  if (!p.bookingToolUrl) p.bookingToolUrl = '';
   if (!p.city) p.city = '';
   if (!p.state) p.state = '';
   if (!p.lastActionDate) p.lastActionDate = p.updatedAt || p.createdAt;
@@ -821,72 +941,85 @@ function migrate(p) {
   if (p.projectValue === undefined) p.projectValue = 800;
   if (!p.sourceHashtag) p.sourceHashtag = '';
   if (OLD_STAGE_MAP[p.currentStage]) p.currentStage = OLD_STAGE_MAP[p.currentStage];
+  if (p.channel === 'dm' && !DM_STAGES.includes(p.currentStage)) p.currentStage = 'New DM Prospect';
+  if (p.channel === 'call' && !p.currentCallStatus) p.currentCallStatus = 'New Call Prospect';
+  if (p.channel === 'call' && !CALL_STATUSES.includes(p.currentCallStatus)) p.currentCallStatus = 'New Call Prospect';
   if (p.stageHistory) {
-    p.stageHistory = p.stageHistory.map(s => ({
-      ...s, stage: OLD_STAGE_MAP[s.stage] || s.stage
-    }));
+    p.stageHistory = p.stageHistory.map(s => ({ ...s, stage: OLD_STAGE_MAP[s.stage] || s.stage }));
   }
+  if (!p.stageHistory) p.stageHistory = [];
+  if (!p.callStatusHistory) p.callStatusHistory = [];
   return p;
 }
 
 function addProspect(d) {
   if (!auth.currentUser) return null;
   const now = new Date().toISOString();
-  const stage = d.stage || 'Researched';
+  const channel = d.channel === 'call' ? 'call' : 'dm';
+  const stage = channel === 'dm' ? 'New DM Prospect' : '';
+  const callStatus = channel === 'call' ? 'New Call Prospect' : '';
   const p = {
     id: uid(),
     userId: auth.currentUser.uid,
-    handle: (d.handle.startsWith('@') ? d.handle : '@'+d.handle).toLowerCase(),
-    industry: d.industry,
-    initialMessage: d.messageType || 'compliment',
-    customMessage: d.customMessage || '',
-    dateContacted: d.dateContacted,
+    channel,
+    handle: channel === 'dm' && d.handle ? (d.handle.startsWith('@') ? d.handle : '@'+d.handle).toLowerCase() : '',
+    fullName: d.fullName || '',
+    businessName: d.businessName || '',
+    phoneNumber: d.phoneNumber || '',
+    industry: '',
+    initialMessage: '',
+    customMessage: '',
+    dateContacted: todayStr(),
     currentStage: stage,
-    stageHistory: [{ stage, timestamp: now, note: d.initialNote||'' }],
-    conversationLog: [{ id:uid(), timestamp:now, type:'stage-change', text:'Prospect added in stage: '+stage, link:'' }],
+    currentCallStatus: callStatus,
+    stageHistory: channel === 'dm' ? [{ stage, timestamp: now, note: d.initialNote||'' }] : [],
+    callStatusHistory: channel === 'call' ? [{ status: callStatus, timestamp: now, note: d.initialNote||'' }] : [],
+    conversationLog: [{ id:uid(), timestamp:now, type:'prospect-added', channel, text:'Prospect added: '+displayName({ ...d, channel }), link:'' }],
     notes: d.initialNote || '',
     followerCount: d.followerCount || null,
     hasBookingTool: !!d.hasBookingTool,
     bookingToolName: d.bookingToolName || '',
-    bookingToolUrl: d.bookingToolUrl || '',
+    bookingToolUrl: '',
     city: d.city || '',
     state: d.state || '',
     lastActionDate: now,
     nextActionDate: d.nextActionDate || '',
     projectValue: d.projectValue || 800,
-    sourceHashtag: d.sourceHashtag || '',
+    sourceHashtag: '',
     createdAt: now,
     updatedAt: now
   };
-  if (d.initialNote) {
-    p.conversationLog.push({ id:uid(), timestamp:now, type:'other', text:d.initialNote, link:'' });
-  }
-  // Optimistic local update
+  if (d.initialNote) p.conversationLog.push({ id:uid(), timestamp:now, type:'other', channel, text:d.initialNote, link:'' });
   prospectsCache.push(p);
-  // Write to Firestore
   db.collection('prospects').doc(p.id).set(p).catch(err => console.error('addProspect:', err));
   return p;
 }
 
-function updateStage(id, stage, note) {
+function updateStatus(id, status, note) {
   const i = prospectsCache.findIndex(p => p.id === id);
   if (i < 0) return null;
   const now = new Date().toISOString();
+  const p = migrate(prospectsCache[i]);
+  const isCall = p.channel === 'call';
   const updated = {
-    ...prospectsCache[i],
-    currentStage: stage,
-    stageHistory: [...(prospectsCache[i].stageHistory||[]), { stage, timestamp:now, note:note||'' }],
+    ...p,
+    currentStage: isCall ? p.currentStage : status,
+    currentCallStatus: isCall ? status : p.currentCallStatus,
+    stageHistory: isCall ? (p.stageHistory||[]) : [...(p.stageHistory||[]), { stage:status, timestamp:now, note:note||'' }],
+    callStatusHistory: isCall ? [...(p.callStatusHistory||[]), { status, timestamp:now, note:note||'' }] : (p.callStatusHistory||[]),
     lastActionDate: now,
     updatedAt: now,
-    conversationLog: [...(prospectsCache[i].conversationLog||[]), {
-      id:uid(), timestamp:now, type:'stage-change',
-      text:'Stage → '+stage+(note?' · '+note:''), link:''
+    conversationLog: [...(p.conversationLog||[]), {
+      id:uid(), timestamp:now, type:'stage-change', channel:p.channel,
+      text:(isCall ? 'Call status: ' : 'DM stage: ')+status+(note?' - '+note:''), link:''
     }]
   };
   prospectsCache[i] = updated;
-  db.collection('prospects').doc(id).set(updated).catch(err => console.error('updateStage:', err));
+  db.collection('prospects').doc(id).set(updated).catch(err => console.error('updateStatus:', err));
   return updated;
 }
+
+function updateStage(id, stage, note) { return updateStatus(id, stage, note); }
 
 function addLogEntry(id, entry) {
   const i = prospectsCache.findIndex(p => p.id === id);
@@ -900,6 +1033,39 @@ function addLogEntry(id, entry) {
   };
   prospectsCache[i] = updated;
   db.collection('prospects').doc(id).set(updated).catch(err => console.error('addLogEntry:', err));
+}
+
+function logOutreach(id, d) {
+  const i = prospectsCache.findIndex(p => p.id === id);
+  if (i < 0) return null;
+  const now = new Date().toISOString();
+  const p = migrate(prospectsCache[i]);
+  const isCall = d.channel === 'call';
+  const entry = {
+    id:uid(), timestamp:now, channel:d.channel, type:slug(d.logType), logType:d.logType,
+    text:d.note || '', link:'', nextActionDate:d.nextActionDate || ''
+  };
+  if (isCall) {
+    entry.callStatus = d.status;
+    entry.attemptNumber = d.attemptNumber;
+  } else {
+    entry.stage = d.stage;
+    entry.preEngaged = !!d.preEngaged;
+  }
+  const updated = {
+    ...p,
+    currentStage: isCall ? p.currentStage : d.stage,
+    currentCallStatus: isCall ? d.status : p.currentCallStatus,
+    stageHistory: isCall ? (p.stageHistory||[]) : [...(p.stageHistory||[]), { stage:d.stage, timestamp:now, note:d.note||'' }],
+    callStatusHistory: isCall ? [...(p.callStatusHistory||[]), { status:d.status, timestamp:now, note:d.note||'' }] : (p.callStatusHistory||[]),
+    conversationLog: [...(p.conversationLog||[]), entry],
+    nextActionDate:d.nextActionDate || '',
+    lastActionDate:now,
+    updatedAt:now
+  };
+  prospectsCache[i] = updated;
+  db.collection('prospects').doc(id).set(updated).catch(err => console.error('logOutreach:', err));
+  return updated;
 }
 
 function updateFields(id, fields) {
@@ -971,31 +1137,54 @@ function fmtFollowers(n) {
 // ============================================================
 // BADGES
 // ============================================================
+function statusFor(p) { return p.channel === 'call' ? p.currentCallStatus : p.currentStage; }
+function displayName(p) {
+  if (p.channel === 'call') return p.fullName || p.businessName || p.phoneNumber || 'Unnamed Call Prospect';
+  return p.handle || p.fullName || 'Unnamed DM Prospect';
+}
+function channelPill(p) {
+  return `<span class="channel-pill ${p.channel === 'call' ? 'call' : ''}">${p.channel === 'call' ? 'Call' : 'DM'}</span>`;
+}
 function stageBadge(s) {
-  return `<span class="stage-badge ${STAGE_CLASS[s]||'s-researched'}">${s||'—'}</span>`;
+  const color = STATUS_COLOR[s] || '#9090b0';
+  return `<span class="stage-badge" style="background:${color}22;color:${color}">${s||'?'}</span>`;
 }
 function industryPill(n) {
-  return `<span class="industry-pill">${n||'—'}</span>`;
+  return n ? `<span class="industry-pill">${n}</span>` : '';
 }
+function slug(label) {
+  return String(label || 'other').toLowerCase().replace(/[??]/g,' ').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'') || 'other';
+}
+function normPhone(v) { return String(v || '').replace(/\D/g,''); }
+function outreachLogs(p, channel) {
+  return (p.conversationLog || []).filter(e => e.channel === channel && !['prospect-added','stage-change'].includes(e.type));
+}
+function isToday(iso) { return !!iso && iso.startsWith(todayStr()); }
+function isThisWeek(iso) { return !!iso && new Date(iso) >= weekStart(); }
+
 
 // ============================================================
 // DM PILL
 // ============================================================
-function updateDmPill() {
+function updateDailyPills() {
   const ps = getAll();
   const settings = getSettings();
   const today = todayStr();
-  let count = 0;
-  for (const p of ps) {
-    if (p.stageHistory.some(s => s.stage === 'DM Sent' && s.timestamp.startsWith(today))) count++;
-  }
-  const target = settings.dailyTarget;
-  const pill = document.getElementById('dm-pill');
+  const dmCount = ps.reduce((sum,p) => sum + outreachLogs(p,'dm').filter(e => e.timestamp && e.timestamp.startsWith(today)).length, 0);
+  const callCount = ps.reduce((sum,p) => sum + outreachLogs(p,'call').filter(e => e.timestamp && e.timestamp.startsWith(today)).length, 0);
+  updateOnePill('dm-pill', dmCount, settings.dailyDmTarget, 'DMs');
+  updateOnePill('call-pill', callCount, settings.dailyCallTarget, 'Calls');
+}
+function updateOnePill(id, count, target, label) {
+  const pill = document.getElementById(id);
   if (!pill) return;
-  pill.textContent = `Today: ${count} / ${target} DMs`;
+  target = target || 1;
+  pill.textContent = `${count} / ${target} ${label}`;
   const pct = count / target;
   pill.className = 'dm-pill ' + (pct >= 1 ? 'green' : pct >= 0.5 ? 'amber' : 'gray');
 }
+function updateDmPill() { updateDailyPills(); }
+
 
 // ============================================================
 // NAVIGATION
@@ -1025,24 +1214,25 @@ function renderToday() {
   const settings = getSettings();
   const today = todayStr();
 
-  const hot = ps.filter(p => ['Replied','Mockup Requested','Negotiating'].includes(p.currentStage))
+  const hot = ps.filter(p => ['Negotiating','Call Booked','Spoke — Follow Up'].includes(statusFor(p)))
     .sort((a,b) => new Date(a.updatedAt) - new Date(b.updatedAt));
 
   const followUpDue = ps.filter(p => p.nextActionDate && p.nextActionDate <= today)
     .sort((a,b) => a.nextActionDate.localeCompare(b.nextActionDate));
 
   const goingCold = ps.filter(p =>
-    ['DM Sent','Seen No Reply'].includes(p.currentStage) &&
+    ((p.channel === 'dm' && ['M1 Sent','M2 Sent','M3 Sent','M4 Sent','M5a Sent','Follow-Up Sent'].includes(p.currentStage)) ||
+     (p.channel === 'call' && ['No Answer','Voicemail Left'].includes(p.currentCallStatus))) &&
     hoursDiff(p.lastActionDate || p.updatedAt) >= settings.followUpHours
   ).sort((a,b) => daysInStage(b) - daysInStage(a));
 
-  const readyToDm = ps.filter(p => p.currentStage === 'Engaged');
+  const readyToContact = ps.filter(p => ['New DM Prospect','New Call Prospect'].includes(statusFor(p)));
 
   document.getElementById('today-content').innerHTML =
-    todaySection('🔥 Hot — Act Now', hot, '✅', 'All caught up! No hot prospects right now.') +
-    todaySection('⏰ Follow-up Due', followUpDue, '📅', 'No follow-ups due today.') +
-    todaySection('💀 Going Cold', goingCold, '❄️', `No prospects going cold (threshold: ${settings.followUpHours}h).`) +
-    todaySection('🆕 Ready to DM', readyToDm, '📱', 'No prospects in Engaged stage yet.');
+    todaySection('?? Hot ? Act Now', hot, '?', 'All caught up! No hot prospects right now.') +
+    todaySection('? Follow-up Due', followUpDue, '??', 'No follow-ups due today.') +
+    todaySection('Going Cold', goingCold, '!', `No prospects going cold (threshold: ${settings.followUpHours}h).`) +
+    todaySection('Ready to Contact', readyToContact, '+', 'No new prospects waiting for outreach.');
 }
 
 function todaySection(title, prospects, emoji, emptyMsg) {
@@ -1052,11 +1242,11 @@ function todaySection(title, prospects, emoji, emptyMsg) {
         const dis = daysInStage(p);
         return `<div class="today-card">
           <div class="today-card-info" onclick="openDetail('${p.id}')">
-            <div class="today-card-handle">${p.handle}</div>
+            <div class="today-card-handle">${displayName(p)}</div>
             <div class="today-card-sub">
-              ${stageBadge(p.currentStage)}
-              ${industryPill(p.industry)}
-              <span class="days-badge">${dis}d in stage</span>
+              ${channelPill(p)}
+              ${stageBadge(statusFor(p))}
+              <span class="days-badge">${dis}d in status</span>
             </div>
           </div>
           <button class="btn btn-secondary btn-sm" onclick="openQuickModal('${p.id}')">Update</button>
@@ -1078,41 +1268,38 @@ function renderProspects() {
   const search = document.getElementById('p-search').value;
   const searchLow = search.toLowerCase();
   const stFilt = document.getElementById('p-filter-stage').value;
-  const indFilt = document.getElementById('p-filter-industry').value;
+  const channelFilt = document.getElementById('p-filter-channel').value;
   const sortBy = document.getElementById('p-sort').value;
 
   let ps = getAll();
 
-  // Populate stage filter once
   const sfEl = document.getElementById('p-filter-stage');
   if (sfEl.options.length <= 1) {
-    STAGES.forEach(s => { const o = document.createElement('option'); o.value=s; o.textContent=s; sfEl.appendChild(o); });
-  }
-  // Populate industry filter
-  const ifEl = document.getElementById('p-filter-industry');
-  if (ifEl.options.length <= 1) {
-    const inds = [...new Set(getAll().map(p => p.industry).filter(Boolean))].sort();
-    inds.forEach(ind => { const o = document.createElement('option'); o.value=ind; o.textContent=ind; ifEl.appendChild(o); });
+    [...DM_STAGES, ...CALL_STATUSES.filter(s => !DM_STAGES.includes(s))].forEach(s => {
+      const o = document.createElement('option'); o.value=s; o.textContent=s; sfEl.appendChild(o);
+    });
   }
 
   if (searchLow) {
     ps = ps.filter(p => {
-      const logText = (p.conversationLog||[]).map(e => (e.text||'') + ' ' + (e.link||'')).join(' ').toLowerCase();
-      return p.handle.includes(searchLow) ||
+      const logText = (p.conversationLog||[]).map(e => (e.text||'') + ' ' + (e.logType||'')).join(' ').toLowerCase();
+      return (p.handle||'').toLowerCase().includes(searchLow) ||
+        (p.fullName||'').toLowerCase().includes(searchLow) ||
+        (p.businessName||'').toLowerCase().includes(searchLow) ||
+        (p.phoneNumber||'').toLowerCase().includes(searchLow) ||
         (p.city||'').toLowerCase().includes(searchLow) ||
         (p.state||'').toLowerCase().includes(searchLow) ||
-        (p.sourceHashtag||'').toLowerCase().includes(searchLow) ||
         (p.notes||'').toLowerCase().includes(searchLow) ||
         logText.includes(searchLow);
     });
   }
-  if (stFilt) ps = ps.filter(p => p.currentStage === stFilt);
-  if (indFilt) ps = ps.filter(p => p.industry === indFilt);
+  if (stFilt) ps = ps.filter(p => statusFor(p) === stFilt);
+  if (channelFilt) ps = ps.filter(p => p.channel === channelFilt);
 
   if (sortBy === 'date-desc') ps.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
   else if (sortBy === 'date-asc') ps.sort((a,b) => new Date(a.createdAt) - new Date(b.createdAt));
   else if (sortBy === 'updated') ps.sort((a,b) => new Date(b.updatedAt) - new Date(a.updatedAt));
-  else if (sortBy === 'stage') ps.sort((a,b) => STAGES.indexOf(a.currentStage) - STAGES.indexOf(b.currentStage));
+  else if (sortBy === 'stage') ps.sort((a,b) => statusFor(a).localeCompare(statusFor(b)));
 
   document.getElementById('p-count').textContent = `${ps.length} prospect${ps.length !== 1 ? 's' : ''}`;
 
@@ -1122,7 +1309,7 @@ function renderProspects() {
   if (ps.length === 0) {
     const allEmpty = getRaw().length === 0;
     list.innerHTML = `<div class="empty-state">
-      <span class="empty-emoji">${allEmpty ? '📱' : '🔍'}</span>
+      <span class="empty-emoji">${allEmpty ? '+' : '??'}</span>
       <div class="empty-title">${allEmpty ? 'No prospects yet' : 'No results'}</div>
       <div class="empty-desc">${allEmpty ? 'Go to Log Outreach to add your first prospect.' : 'Try adjusting your search or filters.'}</div>
       ${allEmpty ? `<button class="btn btn-primary" style="max-width:200px;margin:0 auto" onclick="navigateTo('log')">Add Prospect</button>` : ''}
@@ -1139,23 +1326,26 @@ function renderProspects() {
     const dis = daysInStage(p);
     const sel = selectedIds.has(p.id);
     const loc = [p.city, p.state].filter(Boolean).join(', ');
+    const identity = displayName(p);
+    const detail = p.channel === 'call'
+      ? [p.businessName, p.phoneNumber].filter(Boolean).join(' ? ')
+      : [p.followerCount ? fmtFollowers(p.followerCount) + ' followers' : '', p.hasBookingTool ? (p.bookingToolName || 'Has booking tool') : ''].filter(Boolean).join(' ? ');
     return `<div class="prospect-card ${sel ? 'selected' : ''}" id="pc-${p.id}">
       <div style="display:flex;align-items:flex-start;gap:var(--space-3)">
-        <div class="check-box" onclick="toggleSelect('${p.id}',event)">${sel ? '<span style="color:white;font-size:.75rem">✓</span>' : ''}</div>
+        <div class="check-box" onclick="toggleSelect('${p.id}',event)">${sel ? '<span style="color:white;font-size:.75rem">?</span>' : ''}</div>
         <div style="flex:1;min-width:0">
           <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:var(--space-3)">
             <div onclick="${selectMode ? `toggleSelect('${p.id}',event)` : `openDetail('${p.id}')`}" style="flex:1;min-width:0;cursor:pointer">
-              <div class="p-handle">${hl(p.handle)}</div>
+              <div class="p-handle">${hl(identity)}</div>
               <div class="p-meta">
-                ${industryPill(p.industry)}
-                ${stageBadge(p.currentStage)}
-                <span class="days-badge">${dis}d in stage</span>
+                ${channelPill(p)}
+                ${stageBadge(statusFor(p))}
+                <span class="days-badge">${dis}d in status</span>
               </div>
               <div class="p-dates">
-                ${loc ? hl(loc) + ' · ' : ''}Added ${fmtDate(p.dateContacted)}
-                ${p.sourceHashtag ? ' · <span style="color:var(--text-muted)">#' + hl(p.sourceHashtag) + '</span>' : ''}
-                ${p.projectValue ? ' · <span style="color:var(--success)">$' + p.projectValue + '</span>' : ''}
-                ${p.followerCount ? ' · ' + fmtFollowers(p.followerCount) + ' followers' : ''}
+                ${loc ? hl(loc) + ' ? ' : ''}Added ${fmtDate(p.dateContacted || p.createdAt)}
+                ${p.projectValue ? ' ? <span style="color:var(--success)">$' + p.projectValue + '</span>' : ''}
+                ${detail ? ' ? ' + hl(detail) : ''}
               </div>
             </div>
             <button class="btn btn-secondary btn-sm" style="flex-shrink:0" onclick="event.stopPropagation();openQuickModal('${p.id}')">Update</button>
@@ -1188,12 +1378,17 @@ function toggleSelect(id, e) {
 }
 
 function applyBulkStage() {
-  const stage = document.getElementById('bulk-stage').value;
-  if (!stage || selectedIds.size === 0) { alert('Select prospects and a target stage first.'); return; }
-  if (!confirm(`Move ${selectedIds.size} prospect(s) to "${stage}"?`)) return;
-  selectedIds.forEach(id => updateStage(id, stage, 'Bulk stage update'));
+  const status = document.getElementById('bulk-stage').value;
+  if (!status || selectedIds.size === 0) { alert('Select prospects and a target status first.'); return; }
+  if (!confirm(`Move ${selectedIds.size} prospect(s) to "${status}"?`)) return;
+  selectedIds.forEach(id => {
+    const p = getAll().find(x => x.id === id);
+    if (!p) return;
+    if (p.channel === 'call' && CALL_STATUSES.includes(status)) updateStatus(id, status, 'Bulk status update');
+    if (p.channel !== 'call' && DM_STAGES.includes(status)) updateStatus(id, status, 'Bulk status update');
+  });
   toggleSelectMode();
-  updateDmPill();
+  updateDailyPills();
 }
 
 // ============================================================
@@ -1203,21 +1398,23 @@ function openQuickModal(id) {
   const ps = getAll();
   const p = ps.find(x => x.id === id);
   if (!p) return;
-  document.getElementById('qm-title').textContent = p.handle;
+  document.getElementById('qm-title').textContent = displayName(p);
   document.getElementById('qm-id').value = id;
   document.getElementById('qm-note').value = '';
+  const options = p.channel === 'call' ? CALL_STATUSES : DM_STAGES;
+  const current = statusFor(p);
   const sel = document.getElementById('qm-stage');
-  sel.innerHTML = STAGES.map(s => `<option value="${s}" ${s === p.currentStage ? 'selected' : ''}>${s}</option>`).join('');
+  sel.innerHTML = options.map(s => `<option value="${s}" ${s === current ? 'selected' : ''}>${s}</option>`).join('');
   openModal('quick-modal');
 }
 
 function saveQuickStage() {
   const id = document.getElementById('qm-id').value;
-  const stage = document.getElementById('qm-stage').value;
+  const status = document.getElementById('qm-stage').value;
   const note = document.getElementById('qm-note').value;
-  updateStage(id, stage, note);
+  updateStatus(id, status, note);
   closeModal('quick-modal');
-  updateDmPill();
+  updateDailyPills();
   const ap = document.querySelector('.page.active');
   if (ap && ap.id === 'page-today') renderToday();
   if (ap && ap.id === 'page-prospects') renderProspects();
@@ -1247,33 +1444,32 @@ function renderDetail(id) {
   const ps = getAll();
   const p = ps.find(x => x.id === id);
   if (!p) return;
-  document.getElementById('detail-title').textContent = p.handle;
+  document.getElementById('detail-title').textContent = displayName(p);
   const dis = daysInStage(p);
   const log = (p.conversationLog || []).slice().reverse();
+  const channelDetails = p.channel === 'call'
+    ? `${infoRow('Full Name', p.fullName || '?')}${infoRow('Business Name', p.businessName || '?')}${infoRow('Phone Number', p.phoneNumber || '?')}`
+    : `${infoRow('Instagram Handle', p.handle || '?')}${infoRow('Followers', fmtFollowers(p.followerCount))}${infoRow('Booking Tool', p.hasBookingTool ? (p.bookingToolName || 'Yes') : 'No')}`;
 
   document.getElementById('detail-body').innerHTML = `
     <div class="card mb-4">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:var(--space-3);margin-bottom:var(--space-4)">
         <div>
-          <div style="font-size:var(--font-2xl);font-weight:800">${p.handle}</div>
+          <div style="font-size:var(--font-2xl);font-weight:800">${displayName(p)}</div>
           <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">
-            ${industryPill(p.industry)}
-            ${stageBadge(p.currentStage)}
-            <span class="days-badge">${dis}d in stage</span>
+            ${channelPill(p)}
+            ${stageBadge(statusFor(p))}
+            <span class="days-badge">${dis}d in status</span>
           </div>
         </div>
         <button class="btn btn-secondary btn-sm" onclick="openEditModal('${p.id}')">Edit Details</button>
       </div>
-      ${infoRow('Location', [p.city, p.state].filter(Boolean).join(', ') || '—')}
-      ${infoRow('Followers', fmtFollowers(p.followerCount))}
-      ${infoRow('Project Value', p.projectValue ? '$'+p.projectValue : '—')}
-      ${infoRow('Source Hashtag', p.sourceHashtag ? '#'+p.sourceHashtag : '—')}
-      ${infoRow('Booking Tool', p.hasBookingTool ? (p.bookingToolName || 'Yes') : 'No')}
-      ${p.hasBookingTool && p.bookingToolUrl ? infoRow('Booking URL', `<a href="${p.bookingToolUrl}" style="color:var(--accent-light)" target="_blank">${p.bookingToolUrl}</a>`) : ''}
-      ${infoRow('Date Contacted', fmtDate(p.dateContacted))}
+      ${channelDetails}
+      ${infoRow('Location', [p.city, p.state].filter(Boolean).join(', ') || '?')}
+      ${infoRow('Project Value', p.projectValue ? '$'+p.projectValue : '?')}
+      ${infoRow('Date Added', fmtDate(p.dateContacted || p.createdAt))}
       ${infoRow('Last Action', fmtDateTime(p.lastActionDate || p.updatedAt))}
-      ${infoRow('Next Action', p.nextActionDate ? fmtDate(p.nextActionDate) : '—')}
-      ${infoRow('Initial Message', p.initialMessage || '—')}
+      ${infoRow('Next Action', p.nextActionDate ? fmtDate(p.nextActionDate) : '?')}
     </div>
     <div class="card">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--space-4)">
@@ -1296,9 +1492,9 @@ function infoRow(label, val) {
 }
 
 function renderLogEntry(e) {
-  const icon = LOG_ICON[e.type] || '📌';
+  const icon = LOG_ICON[e.type] || 'Note';
   const dotClass = LOG_DOT[e.type] || '';
-  const typeLabel = (e.type || 'note').replace(/-/g,' ').replace(/\b\w/g, c => c.toUpperCase());
+  const typeLabel = e.logType || (e.type || 'note').replace(/-/g,' ').replace(/\b\w/g, c => c.toUpperCase());
   return `<div class="log-entry">
     <div class="log-dot ${dotClass}">${icon}</div>
     <div class="log-content">
@@ -1307,7 +1503,7 @@ function renderLogEntry(e) {
         <span class="log-time">${fmtDateTime(e.timestamp)}</span>
       </div>
       ${e.text ? `<div class="log-text">${e.text}</div>` : ''}
-      ${e.link ? `<div class="log-link">🔗 <a href="${e.link}" style="color:var(--accent-light)" target="_blank">${e.link}</a></div>` : ''}
+      ${e.link ? `<div class="log-link">Link: <a href="${e.link}" style="color:var(--accent-light)" target="_blank">${e.link}</a></div>` : ''}
     </div>
   </div>`;
 }
@@ -1341,27 +1537,16 @@ function openEditModal(id) {
   const p = ps.find(x => x.id === id);
   if (!p) return;
   const stateOpts = US_STATES.map(s => `<option value="${s}" ${p.state===s?'selected':''}>${s}</option>`).join('');
-  document.getElementById('edit-form-body').innerHTML = `
+  const channelFields = p.channel === 'call' ? `
+    <div class="form-group"><label class="form-label">Full Name</label><input class="form-input" id="ef-full-name" value="${p.fullName||''}"></div>
+    <div class="form-group"><label class="form-label">Business Name</label><input class="form-input" id="ef-business-name" value="${p.businessName||''}"></div>
+    <div class="form-group"><label class="form-label">Phone Number</label><input class="form-input" id="ef-phone" value="${p.phoneNumber||''}"></div>
+  ` : `
     <div class="form-group">
-      <label class="form-label">Handle</label>
-      <div class="input-prefix"><span class="prefix">@</span><input class="form-input" id="ef-handle" value="${p.handle.replace('@','')}"></div>
+      <label class="form-label">Instagram Handle</label>
+      <div class="input-prefix"><span class="prefix">@</span><input class="form-input" id="ef-handle" value="${(p.handle||'').replace('@','')}"></div>
     </div>
-    <div class="form-row">
-      <div class="form-group"><label class="form-label">City</label><input class="form-input" id="ef-city" value="${p.city||''}"></div>
-      <div class="form-group"><label class="form-label">State</label>
-        <select class="form-select" id="ef-state"><option value="">Select...</option>${stateOpts}</select>
-      </div>
-    </div>
-    <div class="form-row">
-      <div class="form-group"><label class="form-label">Followers</label><input class="form-input" type="number" id="ef-followers" value="${p.followerCount||''}"></div>
-      <div class="form-group"><label class="form-label">Project Value ($)</label><input class="form-input" type="number" id="ef-value" value="${p.projectValue||800}"></div>
-    </div>
-    <div class="form-row">
-      <div class="form-group"><label class="form-label">Source Hashtag</label>
-        <div class="input-prefix"><span class="prefix">#</span><input class="form-input" id="ef-hashtag" value="${p.sourceHashtag||''}"></div>
-      </div>
-      <div class="form-group"><label class="form-label">Next Action Date</label><input class="form-input" type="date" id="ef-next-action" value="${p.nextActionDate||''}"></div>
-    </div>
+    <div class="form-group"><label class="form-label">Followers</label><input class="form-input" type="number" id="ef-followers" value="${p.followerCount||''}"></div>
     <div class="form-group"><label class="form-label">Has Booking Tool?</label>
       <div class="toggle-group">
         <button type="button" class="toggle-btn ${!p.hasBookingTool?'active':''}" id="ef-book-no" onclick="efToggleBooking(false)">No</button>
@@ -1369,10 +1554,20 @@ function openEditModal(id) {
       </div>
     </div>
     <div id="ef-booking-fields" class="${!p.hasBookingTool?'hidden':''}">
-      <div class="form-row">
-        <div class="form-group"><label class="form-label">Booking Tool</label><input class="form-input" id="ef-booking-name" value="${p.bookingToolName||''}"></div>
-        <div class="form-group"><label class="form-label">Booking URL</label><input class="form-input" id="ef-booking-url" value="${p.bookingToolUrl||''}"></div>
+      <div class="form-group"><label class="form-label">Booking Tool Name</label><input class="form-input" id="ef-booking-name" value="${p.bookingToolName||''}"></div>
+    </div>
+  `;
+  document.getElementById('edit-form-body').innerHTML = `
+    ${channelFields}
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">City</label><input class="form-input" id="ef-city" value="${p.city||''}"></div>
+      <div class="form-group"><label class="form-label">State</label>
+        <select class="form-select" id="ef-state"><option value="">Select...</option>${stateOpts}</select>
       </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Project Value ($)</label><input class="form-input" type="number" id="ef-value" value="${p.projectValue||800}"></div>
+      <div class="form-group"><label class="form-label">Next Action Date</label><input class="form-input" type="date" id="ef-next-action" value="${p.nextActionDate||''}"></div>
     </div>
     <input type="hidden" id="ef-id" value="${p.id}">
     <button class="btn btn-primary" onclick="saveEdit()">Save Changes</button>
@@ -1389,19 +1584,26 @@ function efToggleBooking(val) {
 
 function saveEdit() {
   const id = document.getElementById('ef-id').value;
-  const bookingVisible = !document.getElementById('ef-booking-fields').classList.contains('hidden');
-  updateFields(id, {
-    handle: ('@' + document.getElementById('ef-handle').value.replace('@','')).toLowerCase(),
+  const p = getAll().find(x => x.id === id);
+  if (!p) return;
+  const fields = {
     city: document.getElementById('ef-city').value.trim(),
     state: document.getElementById('ef-state').value,
-    followerCount: parseInt(document.getElementById('ef-followers').value) || null,
     projectValue: parseInt(document.getElementById('ef-value').value) || 800,
-    sourceHashtag: document.getElementById('ef-hashtag').value.replace('#','').trim(),
-    nextActionDate: document.getElementById('ef-next-action').value,
-    hasBookingTool: bookingVisible,
-    bookingToolName: (document.getElementById('ef-booking-name')||{}).value || '',
-    bookingToolUrl: (document.getElementById('ef-booking-url')||{}).value || ''
-  });
+    nextActionDate: document.getElementById('ef-next-action').value
+  };
+  if (p.channel === 'call') {
+    fields.fullName = document.getElementById('ef-full-name').value.trim();
+    fields.businessName = document.getElementById('ef-business-name').value.trim();
+    fields.phoneNumber = document.getElementById('ef-phone').value.trim();
+  } else {
+    const bookingVisible = !document.getElementById('ef-booking-fields').classList.contains('hidden');
+    fields.handle = ('@' + document.getElementById('ef-handle').value.replace('@','')).toLowerCase();
+    fields.followerCount = parseInt(document.getElementById('ef-followers').value) || null;
+    fields.hasBookingTool = bookingVisible;
+    fields.bookingToolName = (document.getElementById('ef-booking-name')||{}).value || '';
+  }
+  updateFields(id, fields);
   closeModal('edit-modal');
   if (currentDetailId === id) renderDetail(id);
 }
@@ -1427,6 +1629,40 @@ document.querySelectorAll('.modal-overlay').forEach(ov => {
 // LOG FORM
 // ============================================================
 let formHasBooking = false;
+let addChannel = 'dm';
+let outreachChannel = 'dm';
+let callAttemptNumber = 1;
+
+function setSelectOptions(id, values) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.innerHTML = values.map(v => `<option value="${v}">${v}</option>`).join('');
+}
+
+function setAddChannel(channel) {
+  addChannel = channel;
+  document.getElementById('add-channel-dm').classList.toggle('active', channel === 'dm');
+  document.getElementById('add-channel-call').classList.toggle('active', channel === 'call');
+  document.getElementById('add-dm-fields').classList.toggle('hidden', channel !== 'dm');
+  document.getElementById('add-call-fields').classList.toggle('hidden', channel !== 'call');
+  setBooking(channel === 'dm' ? formHasBooking : false);
+}
+
+function setOutreachChannel(channel) {
+  outreachChannel = channel;
+  document.getElementById('outreach-channel-dm').classList.toggle('active', channel === 'dm');
+  document.getElementById('outreach-channel-call').classList.toggle('active', channel === 'call');
+  document.getElementById('outreach-dm-fields').classList.toggle('hidden', channel !== 'dm');
+  document.getElementById('outreach-call-fields').classList.toggle('hidden', channel !== 'call');
+  document.getElementById('lo-prospect-id').value = '';
+  updateOutreachMatch();
+}
+
+function setAttemptNumber(num) {
+  callAttemptNumber = num;
+  document.getElementById('attempt-1').classList.toggle('active', num === 1);
+  document.getElementById('attempt-2').classList.toggle('active', num === 2);
+}
 
 function setBooking(val) {
   formHasBooking = val;
@@ -1435,42 +1671,117 @@ function setBooking(val) {
   document.getElementById('booking-fields').classList.toggle('hidden', !val);
 }
 
-function handleMsgType() {
-  const t = document.getElementById('f-message-type').value;
-  document.getElementById('custom-msg-group').classList.toggle('hidden', t !== 'custom');
+function findOutreachProspect() {
+  const ps = getAll();
+  if (outreachChannel === 'dm') {
+    const raw = document.getElementById('lo-dm-search').value.trim().replace('@','').toLowerCase();
+    if (!raw) return null;
+    return ps.find(p => p.channel === 'dm' && (p.handle || '').replace('@','').toLowerCase() === raw) || null;
+  }
+  const raw = document.getElementById('lo-call-search').value.trim().toLowerCase();
+  const phone = normPhone(raw);
+  if (!raw) return null;
+  return ps.find(p => p.channel === 'call' && (
+    (p.fullName || '').toLowerCase().includes(raw) ||
+    (p.businessName || '').toLowerCase().includes(raw) ||
+    (phone && normPhone(p.phoneNumber).includes(phone))
+  )) || null;
 }
 
-function handleLogSubmit(e) {
+function updateOutreachMatch() {
+  const match = findOutreachProspect();
+  document.getElementById('lo-prospect-id').value = match ? match.id : '';
+  const id = outreachChannel === 'dm' ? 'lo-dm-match' : 'lo-call-match';
+  const el = document.getElementById(id);
+  if (!el) return;
+  const typed = outreachChannel === 'dm'
+    ? document.getElementById('lo-dm-search').value.trim()
+    : document.getElementById('lo-call-search').value.trim();
+  if (!typed) {
+    el.className = 'match-status';
+    el.textContent = outreachChannel === 'dm' ? 'Type a handle to find an existing prospect.' : 'Type a name or phone number to find an existing prospect.';
+  } else if (match) {
+    el.className = 'match-status good';
+    el.textContent = 'Matched: ' + displayName(match);
+  } else {
+    el.className = 'match-status bad';
+    el.textContent = 'No matching prospect. Add the prospect first.';
+  }
+}
+
+function handleAddProspectSubmit(e) {
   e.preventDefault();
+  if (addChannel === 'dm' && !document.getElementById('ad-handle').value.trim()) {
+    alert('Instagram Handle is required for DM prospects.'); return;
+  }
+  if (addChannel === 'call' && (!document.getElementById('ac-full-name').value.trim() || !document.getElementById('ac-phone').value.trim())) {
+    alert('Full Name and Phone Number are required for call prospects.'); return;
+  }
   addProspect({
-    handle: document.getElementById('f-handle').value.trim(),
-    industry: document.getElementById('f-industry').value,
-    stage: document.getElementById('f-stage').value,
-    dateContacted: document.getElementById('f-date').value,
-    followerCount: parseInt(document.getElementById('f-followers').value) || null,
-    projectValue: parseInt(document.getElementById('f-value').value) || 800,
-    city: document.getElementById('f-city').value.trim(),
-    state: document.getElementById('f-state').value,
-    sourceHashtag: document.getElementById('f-hashtag').value.replace('#','').trim(),
-    nextActionDate: document.getElementById('f-next-action').value,
-    hasBookingTool: formHasBooking,
-    bookingToolName: document.getElementById('f-booking-name').value.trim(),
-    bookingToolUrl: document.getElementById('f-booking-url').value.trim(),
-    messageType: document.getElementById('f-message-type').value,
-    customMessage: document.getElementById('f-custom-msg').value.trim(),
-    initialNote: document.getElementById('f-note').value.trim()
+    channel:addChannel,
+    handle:document.getElementById('ad-handle').value.trim(),
+    followerCount:parseInt(document.getElementById('ad-followers').value) || null,
+    hasBookingTool:addChannel === 'dm' && formHasBooking,
+    bookingToolName:document.getElementById('ad-booking-name').value.trim(),
+    fullName:document.getElementById('ac-full-name').value.trim(),
+    businessName:document.getElementById('ac-business-name').value.trim(),
+    phoneNumber:document.getElementById('ac-phone').value.trim(),
+    city:document.getElementById('f-city').value.trim(),
+    state:document.getElementById('f-state').value,
+    projectValue:parseInt(document.getElementById('f-value').value) || 800,
+    nextActionDate:document.getElementById('f-next-action').value,
+    initialNote:document.getElementById('f-note').value.trim()
   });
-  document.getElementById('log-form').reset();
-  document.getElementById('f-date').value = todayStr();
+  document.getElementById('add-prospect-form').reset();
   document.getElementById('f-value').value = '800';
-  document.getElementById('f-stage').value = '';
   setBooking(false);
-  document.getElementById('custom-msg-group').classList.add('hidden');
-  updateDmPill();
-  const btn = document.getElementById('log-submit-btn');
-  btn.textContent = '✓ Prospect Added!';
+  updateDailyPills();
+  refreshCurrentView();
+  const btn = document.getElementById('add-submit-btn');
+  btn.textContent = 'Prospect Added!';
   btn.style.background = 'var(--success)';
-  setTimeout(() => { btn.textContent = 'Add Prospect'; btn.style.background = ''; }, 2000);
+  setTimeout(() => { btn.textContent = 'Add Prospect'; btn.style.background = ''; }, 1800);
+}
+
+function handleOutreachSubmit(e) {
+  e.preventDefault();
+  const id = document.getElementById('lo-prospect-id').value;
+  if (!id) { updateOutreachMatch(); alert('No matching prospect found. Add the prospect first.'); return; }
+  if (outreachChannel === 'dm') {
+    logOutreach(id, {
+      channel:'dm',
+      stage:document.getElementById('lo-dm-stage').value,
+      logType:document.getElementById('lo-dm-type').value,
+      preEngaged:document.getElementById('lo-pre-engaged').checked,
+      note:document.getElementById('lo-dm-note').value.trim(),
+      nextActionDate:document.getElementById('lo-dm-next-action').value
+    });
+    document.getElementById('lo-dm-search').value = '';
+    document.getElementById('lo-pre-engaged').checked = false;
+    document.getElementById('lo-dm-note').value = '';
+    document.getElementById('lo-dm-next-action').value = '';
+  } else {
+    logOutreach(id, {
+      channel:'call',
+      status:document.getElementById('lo-call-status').value,
+      logType:document.getElementById('lo-call-type').value,
+      attemptNumber:callAttemptNumber,
+      note:document.getElementById('lo-call-note').value.trim(),
+      nextActionDate:document.getElementById('lo-call-next-action').value
+    });
+    document.getElementById('lo-call-search').value = '';
+    document.getElementById('lo-call-note').value = '';
+    document.getElementById('lo-call-next-action').value = '';
+    setAttemptNumber(1);
+  }
+  document.getElementById('lo-prospect-id').value = '';
+  updateOutreachMatch();
+  updateDailyPills();
+  refreshCurrentView();
+  const btn = document.getElementById('outreach-submit-btn');
+  btn.textContent = 'Outreach Logged!';
+  btn.style.background = 'var(--success)';
+  setTimeout(() => { btn.textContent = 'Log Outreach'; btn.style.background = ''; }, 1800);
 }
 
 // ============================================================
@@ -1481,273 +1792,82 @@ function renderAnalytics() {
   const el = document.getElementById('analytics-content');
 
   if (ps.length === 0) {
-    el.innerHTML = `<div class="empty-state"><span class="empty-emoji">📊</span><div class="empty-title">No data yet</div><div class="empty-desc">Add prospects to see analytics.</div></div>`;
+    el.innerHTML = `<div class="empty-state"><span class="empty-emoji">??</span><div class="empty-title">No data yet</div><div class="empty-desc">Add prospects to see analytics.</div></div>`;
     return;
   }
 
-  const ws = weekStart();
-  const lws = new Date(ws); lws.setDate(lws.getDate() - 7);
+  const dmPs = ps.filter(p => p.channel === 'dm');
+  const callPs = ps.filter(p => p.channel === 'call');
+  const dmContacted = dmPs.filter(p => outreachLogs(p,'dm').length > 0 || p.currentStage !== 'New DM Prospect');
+  const callContacted = callPs.filter(p => outreachLogs(p,'call').length > 0 || p.currentCallStatus !== 'New Call Prospect');
 
-  function hasDm(p) { return p.stageHistory.some(s => s.stage === 'DM Sent'); }
-  function dmDate(p) { const s = p.stageHistory.find(s => s.stage === 'DM Sent'); return s ? new Date(s.timestamp) : null; }
-  function isReplied(p) { return ['Replied','Pitched','Mockup Requested','Mockup Sent','Negotiating','Closed Won'].includes(p.currentStage); }
-  function isMockupReq(p) { return ['Mockup Requested','Mockup Sent','Negotiating','Closed Won'].includes(p.currentStage); }
-  function isMockupSent(p) { return ['Mockup Sent','Negotiating','Closed Won'].includes(p.currentStage); }
-  function isClosed(p) { return p.currentStage === 'Closed Won'; }
+  const dmReplied = dmPs.filter(p => outreachLogs(p,'dm').some(e => e.logType === 'They replied') || ['Negotiating','Call Booked','Closed Won','Closed Lost'].includes(p.currentStage));
+  const dmMockup = dmPs.filter(p => outreachLogs(p,'dm').some(e => e.logType === 'Sent mockup video') || ['Video Sent','Negotiating','Call Booked','Closed Won'].includes(p.currentStage));
+  const dmBooked = dmPs.filter(p => ['Call Booked','Closed Won'].includes(p.currentStage));
 
-  const dmPs = ps.filter(hasDm);
-  const twPs = dmPs.filter(p => dmDate(p) >= ws);
-  const lwPs = dmPs.filter(p => { const d = dmDate(p); return d >= lws && d < ws; });
+  const noAnswer = callContacted.filter(p => p.currentCallStatus === 'No Answer').length;
+  const voicemail = callContacted.filter(p => p.currentCallStatus === 'Voicemail Left').length;
+  const spoke = callContacted.filter(p => ['Spoke — Not Interested','Spoke — Follow Up','Call Booked','Closed Won','Closed Lost'].includes(p.currentCallStatus)).length;
+  const bookedCall = callContacted.filter(p => ['Call Booked','Closed Won'].includes(p.currentCallStatus)).length;
 
-  function wkM(arr) {
-    const sent = arr.length;
-    const replied = arr.filter(isReplied).length;
-    const mreq = arr.filter(isMockupReq).length;
-    const msent = arr.filter(isMockupSent).length;
-    const closed = arr.filter(isClosed).length;
-    return {
-      sent, replied, mreq, msent, closed,
-      replyRate: sent ? ((replied/sent)*100).toFixed(1) : '0.0',
-      mockupRate: replied ? ((mreq/replied)*100).toFixed(1) : '0.0',
-      closeRate: msent ? ((closed/msent)*100).toFixed(1) : '0.0'
-    };
+  const allOutreach = ps.flatMap(p => outreachLogs(p,'dm').concat(outreachLogs(p,'call')));
+  const contactsToday = allOutreach.filter(e => isToday(e.timestamp)).length;
+  const contactsWeek = allOutreach.filter(e => isThisWeek(e.timestamp)).length;
+  const pipelineValue = ps.filter(p => statusFor(p) !== 'Closed Lost').reduce((s,p) => s + (p.projectValue || 0), 0);
+  const closes = ps.filter(p => statusFor(p) === 'Closed Won').length;
+
+  const dmStageCounts = Object.fromEntries(DM_STAGES.map(s => [s,0]));
+  dmPs.forEach(p => { dmStageCounts[p.currentStage] = (dmStageCounts[p.currentStage] || 0) + 1; });
+
+  function pct(n,d) { return d ? ((n/d)*100).toFixed(1)+'%' : '0.0%'; }
+  function statList(rows) {
+    return `<div style="display:flex;flex-direction:column;gap:9px">${rows.map(([label,value]) => `<div class="info-row"><span class="info-label">${label}</span><span class="info-val">${value}</span></div>`).join('')}</div>`;
   }
-  const tw = wkM(twPs), lw = wkM(lwPs);
-
-  const pipelineValue = ps.filter(p => !['Closed Lost','Ghosted'].includes(p.currentStage))
-    .reduce((s,p) => s + (p.projectValue || 0), 0);
-
-  const closeTimes = ps.filter(isClosed).map(p => {
-    const dm = p.stageHistory.find(s => s.stage === 'DM Sent');
-    const cw = p.stageHistory.find(s => s.stage === 'Closed Won');
-    return dm && cw ? (new Date(cw.timestamp) - new Date(dm.timestamp)) / 86400000 : null;
-  }).filter(Boolean);
-  const avgClose = closeTimes.length ? (closeTimes.reduce((a,b)=>a+b,0)/closeTimes.length).toFixed(1) : null;
-
-  function arrow(a, b) {
-    const av = parseFloat(a), bv = parseFloat(b);
-    if (av > bv) return '<span class="trend-up">↑</span>';
-    if (av < bv) return '<span class="trend-down">↓</span>';
-    return '<span style="color:var(--text-muted)">→</span>';
-  }
-
-  const hashMap = {};
-  ps.forEach(p => {
-    const h = '#'+(p.sourceHashtag||'none');
-    if (!hashMap[h]) hashMap[h] = {n:0,r:0,m:0,c:0};
-    hashMap[h].n++;
-    if (isReplied(p)) hashMap[h].r++;
-    if (isMockupReq(p)) hashMap[h].m++;
-    if (isClosed(p)) hashMap[h].c++;
-  });
-  const hashRows = Object.entries(hashMap)
-    .map(([h,d]) => ({h, d, rr: d.n ? ((d.r/d.n)*100).toFixed(1):'0.0'}))
-    .sort((a,b) => parseFloat(b.rr) - parseFloat(a.rr));
-
-  const indMap = {};
-  ps.forEach(p => {
-    if (!indMap[p.industry]) indMap[p.industry] = {n:0,r:0,m:0,c:0};
-    indMap[p.industry].n++;
-    if (isReplied(p)) indMap[p.industry].r++;
-    if (isMockupReq(p)) indMap[p.industry].m++;
-    if (isClosed(p)) indMap[p.industry].c++;
-  });
-
-  const fRanges = [
-    {label:'Under 1k', min:0, max:999},
-    {label:'1k – 5k', min:1000, max:4999},
-    {label:'5k – 20k', min:5000, max:19999},
-    {label:'20k+', min:20000, max:Infinity}
-  ].map(r => {
-    const rps = ps.filter(p => p.followerCount != null && p.followerCount >= r.min && p.followerCount <= r.max);
-    const rep = rps.filter(isReplied).length, cl = rps.filter(isClosed).length;
-    return { ...r, count:rps.length, rep, cl,
-      rr: rps.length ? ((rep/rps.length)*100).toFixed(1) : '—',
-      cr: rep ? ((cl/rep)*100).toFixed(1) : '—'
-    };
-  });
-
-  const dowDms = Array(7).fill(0), dowRep = Array(7).fill(0);
-  ps.forEach(p => {
-    const dm = p.stageHistory.find(s => s.stage === 'DM Sent');
-    if (dm) {
-      const dow = new Date(dm.timestamp).getDay();
-      dowDms[dow]++;
-      if (isReplied(p)) dowRep[dow]++;
-    }
-  });
-  const maxDow = Math.max(...dowDms, 1);
-  const DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-
-  const stageAges = {};
-  ps.forEach(p => {
-    for (let i = 0; i < p.stageHistory.length; i++) {
-      const s = p.stageHistory[i];
-      const end = i+1 < p.stageHistory.length ? new Date(p.stageHistory[i+1].timestamp) : new Date();
-      const days = (end - new Date(s.timestamp)) / 86400000;
-      if (!stageAges[s.stage]) stageAges[s.stage] = [];
-      stageAges[s.stage].push(days);
-    }
-  });
-
-  const sCounts = {};
-  STAGES.forEach(s => sCounts[s] = 0);
-  ps.forEach(p => { if (sCounts[p.currentStage] !== undefined) sCounts[p.currentStage]++; });
-  const fTotal = ps.length || 1;
-
-  function rateColor(v) {
-    const n = parseFloat(v);
-    return isNaN(n) ? 'var(--text-muted)' : n > 20 ? 'var(--success)' : n > 10 ? 'var(--warning)' : 'var(--text-muted)';
+  function stageBreakdown() {
+    const max = Math.max(...Object.values(dmStageCounts), 1);
+    return DM_STAGES.map(stage => {
+      const n = dmStageCounts[stage] || 0;
+      const color = STATUS_COLOR[stage] || '#9090b0';
+      const width = n ? Math.max((n/max)*100, 4) : 0;
+      return `<div class="funnel-row">
+        <div class="funnel-label">${stage}</div>
+        <div class="funnel-bar-wrap"><div class="funnel-bar" style="width:${width}%;background:${color}22;border-left:3px solid ${color}"></div></div>
+        <div class="funnel-count">${n}</div>
+      </div>`;
+    }).join('');
   }
 
   el.innerHTML = `
-    <!-- KPI Cards -->
-    <div class="stats-grid">
-      ${kpi('DMs Sent This Week', tw.sent, 'DMs with DM Sent stage')}
-      ${kpi('Reply Rate', tw.replyRate+'%', 'replies ÷ DMs sent', 'c-success')}
-      ${kpi('Mockup Rate', tw.mockupRate+'%', 'mockup req ÷ replies', 'c-accent')}
-      ${kpi('Close Rate', tw.closeRate+'%', 'won ÷ mockups sent', 'c-success')}
-      ${kpi('Avg Days to Close', avgClose !== null ? avgClose+'d' : '—', 'DM Sent → Closed Won', 'c-warning')}
-      ${kpi('Pipeline Value', '$'+pipelineValue.toLocaleString(), 'excl. Lost & Ghosted', 'c-success')}
+    <div class="card mb-4">
+      <div class="section-title mb-4" style="margin-top:0">DM Pipeline</div>
+      <div class="stats-grid">
+        ${kpi('Total DM Prospects', dmPs.length, 'all DM channel records')}
+        ${kpi('Response Rate', pct(dmReplied.length, dmContacted.length), 'replied at least once / total DMed', 'c-success')}
+        ${kpi('Mockup Rate', pct(dmMockup.length, dmReplied.length), 'mockup sent / replied', 'c-accent')}
+        ${kpi('Call Booked Rate', pct(dmBooked.length, dmMockup.length), 'call booked / mockup sent', 'c-success')}
+      </div>
+      <div class="section-title mb-4">Stage Breakdown</div>
+      ${stageBreakdown()}
     </div>
 
-    <!-- Week compare -->
     <div class="card mb-4">
-      <div class="section-title mb-4" style="margin-top:0">This Week vs Last Week</div>
-      <div style="overflow-x:auto">
-        <table class="tbl">
-          <thead><tr><th>Metric</th><th>This Week</th><th>Last Week</th><th>Trend</th></tr></thead>
-          <tbody>
-            ${[['DMs Sent','sent','sent'],['Reply Rate','replyRate','replyRate'],['Mockup Rate','mockupRate','mockupRate'],['Close Rate','closeRate','closeRate']]
-              .map(([l,tk,lk]) => `<tr>
-                <td>${l}</td>
-                <td class="text-accent fw-700">${tw[tk]}</td>
-                <td class="text-muted">${lw[lk]}</td>
-                <td>${arrow(tw[tk],lw[lk])}</td>
-              </tr>`).join('')}
-          </tbody>
-        </table>
+      <div class="section-title mb-4" style="margin-top:0">Call Pipeline</div>
+      <div class="stats-grid">
+        ${kpi('Total Called', callContacted.length, 'call prospects with outreach')}
+        ${kpi('No Answer %', pct(noAnswer, callContacted.length), 'current status no answer', 'c-warning')}
+        ${kpi('Voicemail %', pct(voicemail, callContacted.length), 'current status voicemail', 'c-accent')}
+        ${kpi('Spoke %', pct(spoke, callContacted.length), 'spoke statuses / total called', 'c-success')}
+        ${kpi('Booked From Call %', pct(bookedCall, callContacted.length), 'booked or won / total called', 'c-success')}
       </div>
     </div>
 
-    <!-- Best hashtag -->
     <div class="card mb-4">
-      <div class="section-title mb-4" style="margin-top:0">Best Performing Hashtag</div>
-      <div style="overflow-x:auto">
-        <table class="tbl">
-          <thead><tr><th>Hashtag</th><th>Prospects</th><th>Replies</th><th>Mockups</th><th>Closed</th><th>Reply Rate</th></tr></thead>
-          <tbody>
-            ${hashRows.map(({h,d,rr}) => `<tr>
-              <td style="color:var(--accent-light)">${h}</td>
-              <td>${d.n}</td><td>${d.r}</td><td>${d.m}</td><td>${d.c}</td>
-              <td style="color:${rateColor(rr)}">${rr}%</td>
-            </tr>`).join('')}
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- Day of week -->
-    <div class="card mb-4">
-      <div class="section-title mb-4" style="margin-top:0">Best Day of Week</div>
-      <div style="display:flex;align-items:flex-end;gap:6px;height:100px;padding:4px 0">
-        ${DAYS.map((day,i) => {
-          const dh = dowDms[i] > 0 ? Math.max((dowDms[i]/maxDow)*76,4) : 2;
-          const rh = dowDms[i] > 0 ? Math.max((dowRep[i]/dowDms[i])*76,4) : 2;
-          return `<div style="display:flex;flex-direction:column;align-items:center;flex:1">
-            <div style="display:flex;gap:2px;align-items:flex-end;height:80px">
-              <div style="width:12px;background:rgba(124,92,191,.6);border-radius:3px 3px 0 0;height:${dh}px" title="${dowDms[i]} DMs"></div>
-              <div style="width:12px;background:rgba(34,197,94,.7);border-radius:3px 3px 0 0;height:${rh}px" title="${dowRep[i]} replies"></div>
-            </div>
-            <div style="font-size:.6rem;color:var(--text-muted);margin-top:3px;font-weight:700">${day}</div>
-          </div>`;
-        }).join('')}
-      </div>
-      <div style="display:flex;gap:var(--space-4);margin-top:var(--space-3);font-size:var(--font-xs);color:var(--text-muted)">
-        <span><span style="display:inline-block;width:10px;height:10px;background:rgba(124,92,191,.6);border-radius:2px;margin-right:4px"></span>DMs Sent</span>
-        <span><span style="display:inline-block;width:10px;height:10px;background:rgba(34,197,94,.7);border-radius:2px;margin-right:4px"></span>Reply Rate</span>
-      </div>
-    </div>
-
-    <!-- Industry -->
-    <div class="card mb-4">
-      <div class="section-title mb-4" style="margin-top:0">Industry Conversion</div>
-      <div style="overflow-x:auto">
-        <table class="tbl">
-          <thead><tr><th>Industry</th><th>Contacted</th><th>Replied</th><th>Mockup Req</th><th>Closed</th><th>Reply %</th><th>Close %</th></tr></thead>
-          <tbody>
-            ${Object.entries(indMap).sort((a,b)=>b[1].n-a[1].n).map(([ind,d])=>{
-              const rr = d.n ? ((d.r/d.n)*100).toFixed(1):'0.0';
-              const cr = d.r ? ((d.c/d.r)*100).toFixed(1):'0.0';
-              return `<tr>
-                <td>${industryPill(ind)}</td>
-                <td>${d.n}</td><td>${d.r}</td><td>${d.m}</td>
-                <td class="text-success fw-700">${d.c}</td>
-                <td style="color:${rateColor(rr)}">${rr}%</td>
-                <td style="color:${parseFloat(cr)>30?'var(--success)':parseFloat(cr)>10?'var(--warning)':'var(--text-muted)'}">${cr}%</td>
-              </tr>`;
-            }).join('')}
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- Follower ranges -->
-    <div class="card mb-4">
-      <div class="section-title mb-4" style="margin-top:0">Follower Range Breakdown</div>
-      <div style="overflow-x:auto">
-        <table class="tbl">
-          <thead><tr><th>Range</th><th>Prospects</th><th>Replied</th><th>Reply Rate</th><th>Close Rate</th></tr></thead>
-          <tbody>
-            ${fRanges.map(r=>`<tr>
-              <td>${r.label}</td><td>${r.count}</td><td>${r.rep}</td>
-              <td style="color:${rateColor(r.rr)}">${r.rr !== '—' ? r.rr+'%' : '—'}</td>
-              <td style="color:${parseFloat(r.cr)>30?'var(--success)':parseFloat(r.cr)>10?'var(--warning)':'var(--text-muted)'}">${r.cr !== '—' ? r.cr+'%' : '—'}</td>
-            </tr>`).join('')}
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- Funnel -->
-    <div class="card mb-4">
-      <div class="section-title mb-4" style="margin-top:0">Pipeline Funnel</div>
-      ${STAGES.map(stage=>{
-        const n = sCounts[stage]||0;
-        const pct = Math.round((n/fTotal)*100);
-        const w = n > 0 ? Math.max(pct,4) : 0;
-        const col = STAGE_COLOR[stage];
-        return `<div class="funnel-row">
-          <div class="funnel-label">${stage}</div>
-          <div class="funnel-bar-wrap">
-            <div class="funnel-bar" style="width:${w}%;background:${col}22;border-left:3px solid ${col}">
-              <span class="funnel-bar-text" style="color:${col}">${n>0?pct+'%':''}</span>
-            </div>
-          </div>
-          <div class="funnel-count">${n}</div>
-        </div>`;
-      }).join('')}
-    </div>
-
-    <!-- Pipeline age -->
-    <div class="card mb-4">
-      <div class="section-title mb-4" style="margin-top:0">Pipeline Age (avg days per stage)</div>
-      <div style="overflow-x:auto">
-        <table class="tbl">
-          <thead><tr><th>Stage</th><th>Avg Days</th><th>Records</th></tr></thead>
-          <tbody>
-            ${STAGES.map(stage=>{
-              const ages = stageAges[stage]||[];
-              const avg = ages.length ? (ages.reduce((a,b)=>a+b,0)/ages.length).toFixed(1) : null;
-              const hot = avg && parseFloat(avg) > 3;
-              return `<tr>
-                <td>${stage}</td>
-                <td style="color:${hot?'var(--danger)':'var(--text)'};font-weight:${hot?700:400}">${avg !== null ? avg+'d' : '—'}${hot?' ⚠️':''}</td>
-                <td class="text-muted">${ages.length}</td>
-              </tr>`;
-            }).join('')}
-          </tbody>
-        </table>
+      <div class="section-title mb-4" style="margin-top:0">Combined</div>
+      <div class="stats-grid">
+        ${kpi('Total Contacts Today', contactsToday, 'DM + Call logs today')}
+        ${kpi('Total Contacts This Week', contactsWeek, 'DM + Call logs this week')}
+        ${kpi('Total Pipeline Value', '$'+pipelineValue.toLocaleString(), 'excludes Closed Lost', 'c-success')}
+        ${kpi('Closes To Date', closes, 'Closed Won records', 'c-success')}
       </div>
     </div>`;
 }
@@ -1765,7 +1885,8 @@ function kpi(label, value, sub, cls='') {
 // ============================================================
 function renderSettingsPage() {
   const s = getSettings();
-  document.getElementById('s-dm-target').value = s.dailyTarget;
+  document.getElementById('s-dm-target').value = s.dailyDmTarget;
+  document.getElementById('s-call-target').value = s.dailyCallTarget;
   document.getElementById('s-followup-hours').value = s.followUpHours;
 }
 
@@ -1774,11 +1895,10 @@ function renderSettingsPage() {
 // ============================================================
 function exportCSV() {
   const ps = getAll();
-  const headers = ['Handle','Industry','Stage','City','State','Followers','ProjectValue','SourceHashtag','HasBookingTool','BookingTool','DateContacted','NextActionDate','DaysInStage','CreatedAt'];
+  const headers = ['Channel','DisplayName','InstagramHandle','FullName','BusinessName','PhoneNumber','Status','City','State','Followers','ProjectValue','HasBookingTool','BookingTool','DateAdded','NextActionDate','DaysInStatus','CreatedAt'];
   const rows = ps.map(p => [
-    p.handle, p.industry, p.currentStage, p.city||'', p.state||'',
-    p.followerCount||'', p.projectValue||'', p.sourceHashtag||'',
-    p.hasBookingTool?'Yes':'No', p.bookingToolName||'',
+    p.channel, displayName(p), p.handle||'', p.fullName||'', p.businessName||'', p.phoneNumber||'', statusFor(p), p.city||'', p.state||'',
+    p.followerCount||'', p.projectValue||'', p.hasBookingTool?'Yes':'No', p.bookingToolName||'',
     p.dateContacted||'', p.nextActionDate||'', daysInStage(p), p.createdAt
   ].map(v => '"'+String(v).replace(/"/g,'""')+'"').join(','));
   dlFile([headers.join(','), ...rows].join('\n'), 'jx-outreach-'+todayStr()+'.csv', 'text/csv');
@@ -1798,26 +1918,26 @@ function importJSON(e) {
       const data = JSON.parse(ev.target.result);
       const ps = data.prospects || (Array.isArray(data) ? data : null);
       if (!ps) throw new Error('Invalid format — expected { prospects: [...] }');
-      if (!confirm(`Import ${ps.length} prospects? This replaces ALL current data.`)) return;
+      if (!confirm(`Import ${ps.length} prospects? Existing data is preserved — this will add or update records only.`)) return;
 
       const userId = auth.currentUser.uid;
 
-      // Delete all existing docs
-      const snap = await db.collection('prospects').where('userId', '==', userId).get();
-      if (!snap.empty) {
-        const delBatch = db.batch();
-        snap.docs.forEach(doc => delBatch.delete(doc.ref));
-        await delBatch.commit();
-      }
+      // Map old records into the new data model: default channel to 'dm', map old stage names
+      const mapped = ps.map(p => {
+        const newStage = OLD_STAGE_MAP[p.currentStage] || 'New DM Prospect';
+        return { ...p, channel: p.channel || 'dm', currentStage: newStage, userId };
+      });
 
-      // Write new docs in chunks of 499
+      // Write docs in chunks of 499 — upsert by id (or auto-id if missing)
       const chunks = [];
-      for (let i = 0; i < ps.length; i += 499) chunks.push(ps.slice(i, i + 499));
+      for (let i = 0; i < mapped.length; i += 499) chunks.push(mapped.slice(i, i + 499));
       for (const chunk of chunks) {
         const batch = db.batch();
         chunk.forEach(p => {
-          const pp = { ...p, userId };
-          batch.set(db.collection('prospects').doc(pp.id), pp);
+          const ref = p.id
+            ? db.collection('prospects').doc(p.id)
+            : db.collection('prospects').doc();
+          batch.set(ref, p);
         });
         await batch.commit();
       }
@@ -1825,7 +1945,7 @@ function importJSON(e) {
       if (data.settings) localStorage.setItem(SETTINGS_KEY, JSON.stringify(data.settings));
       alert('Import successful!');
       renderSettingsPage();
-      updateDmPill();
+      updateDailyPills();
     } catch(err) { alert('Import failed: ' + err.message); }
   };
   reader.readAsText(file);
@@ -1845,7 +1965,7 @@ async function clearAllData() {
   }
 
   prospectsCache = [];
-  updateDmPill();
+  updateDailyPills();
   navigateTo('today');
   alert('All data cleared.');
 }
@@ -1862,27 +1982,25 @@ function dlFile(content, filename, type) {
 // INIT (called once after first Firestore snapshot arrives)
 // ============================================================
 function initApp() {
-  // Stage dropdowns
-  ['f-stage','qm-stage','bulk-stage'].forEach(id => {
-    const el = document.getElementById(id);
-    if (!el) return;
-    STAGES.forEach(s => {
-      const o = document.createElement('option');
-      o.value = s; o.textContent = s; el.appendChild(o);
+  setSelectOptions('lo-dm-stage', DM_STAGES);
+  setSelectOptions('lo-dm-type', DM_LOG_TYPES);
+  setSelectOptions('lo-call-status', CALL_STATUSES);
+  setSelectOptions('lo-call-type', CALL_LOG_TYPES);
+  setSelectOptions('bulk-stage', ['', ...DM_STAGES, ...CALL_STATUSES.filter(s => !DM_STAGES.includes(s))]);
+  document.getElementById('bulk-stage').options[0].textContent = 'Move to status...';
+
+  document.querySelectorAll('.state-select').forEach(sfEl => {
+    if (sfEl.options.length > 1) return;
+    US_STATES.forEach(s => {
+      const o = document.createElement('option'); o.value = s; o.textContent = s; sfEl.appendChild(o);
     });
   });
 
-  // US States
-  const sfEl = document.getElementById('f-state');
-  US_STATES.forEach(s => {
-    const o = document.createElement('option'); o.value = s; o.textContent = s; sfEl.appendChild(o);
-  });
-
-  // Defaults
-  document.getElementById('f-date').value = todayStr();
   document.getElementById('f-value').value = '800';
-
-  updateDmPill();
+  setAddChannel('dm');
+  setOutreachChannel('dm');
+  setAttemptNumber(1);
+  updateDailyPills();
   renderToday();
 }
 </script>
