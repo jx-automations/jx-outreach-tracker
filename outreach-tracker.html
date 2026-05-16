@@ -952,7 +952,7 @@ function migrate(p) {
   return p;
 }
 
-function addProspect(d) {
+async function addProspect(d) {
   if (!auth.currentUser) return null;
   const now = new Date().toISOString();
   const channel = d.channel === 'call' ? 'call' : 'dm';
@@ -976,7 +976,7 @@ function addProspect(d) {
     callStatusHistory: channel === 'call' ? [{ status: callStatus, timestamp: now, note: d.initialNote||'' }] : [],
     conversationLog: [{ id:uid(), timestamp:now, type:'prospect-added', channel, text:'Prospect added: '+displayName({ ...d, channel }), link:'' }],
     notes: d.initialNote || '',
-    followerCount: d.followerCount || null,
+    followerCount: d.followerCount || 0,
     hasBookingTool: !!d.hasBookingTool,
     bookingToolName: d.bookingToolName || '',
     bookingToolUrl: '',
@@ -991,7 +991,18 @@ function addProspect(d) {
   };
   if (d.initialNote) p.conversationLog.push({ id:uid(), timestamp:now, type:'other', channel, text:d.initialNote, link:'' });
   prospectsCache.push(p);
-  db.collection('prospects').doc(p.id).set(p).catch(err => console.error('addProspect:', err));
+  try {
+    await db.collection('prospects').doc(p.id).set(p);
+  } catch (err) {
+    console.error('addProspect write failed:', err);
+    prospectsCache = prospectsCache.filter(x => x.id !== p.id);
+    refreshCurrentView();
+    const msg = err.code === 'permission-denied'
+      ? 'Save failed: Firestore permission denied.\n\nFix: open Firebase Console → Firestore → Rules and ensure your rules allow writes for authenticated users.'
+      : 'Save failed: ' + err.message;
+    alert(msg);
+    return null;
+  }
   return p;
 }
 
@@ -1709,7 +1720,7 @@ function updateOutreachMatch() {
   }
 }
 
-function handleAddProspectSubmit(e) {
+async function handleAddProspectSubmit(e) {
   e.preventDefault();
   if (addChannel === 'dm' && !document.getElementById('ad-handle').value.trim()) {
     alert('Instagram Handle is required for DM prospects.'); return;
@@ -1717,10 +1728,13 @@ function handleAddProspectSubmit(e) {
   if (addChannel === 'call' && (!document.getElementById('ac-full-name').value.trim() || !document.getElementById('ac-phone').value.trim())) {
     alert('Full Name and Phone Number are required for call prospects.'); return;
   }
-  addProspect({
+  const btn = document.getElementById('add-submit-btn');
+  btn.disabled = true;
+  btn.textContent = 'Saving…';
+  const result = await addProspect({
     channel:addChannel,
     handle:document.getElementById('ad-handle').value.trim(),
-    followerCount:parseInt(document.getElementById('ad-followers').value) || null,
+    followerCount:parseInt(document.getElementById('ad-followers').value) || 0,
     hasBookingTool:addChannel === 'dm' && formHasBooking,
     bookingToolName:document.getElementById('ad-booking-name').value.trim(),
     fullName:document.getElementById('ac-full-name').value.trim(),
@@ -1732,12 +1746,13 @@ function handleAddProspectSubmit(e) {
     nextActionDate:document.getElementById('f-next-action').value,
     initialNote:document.getElementById('f-note').value.trim()
   });
+  btn.disabled = false;
+  if (!result) { btn.textContent = 'Add Prospect'; return; }
   document.getElementById('add-prospect-form').reset();
   document.getElementById('f-value').value = '1497';
   setBooking(false);
   updateDailyPills();
   refreshCurrentView();
-  const btn = document.getElementById('add-submit-btn');
   btn.textContent = 'Prospect Added!';
   btn.style.background = 'var(--success)';
   setTimeout(() => { btn.textContent = 'Add Prospect'; btn.style.background = ''; }, 1800);
