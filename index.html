@@ -412,7 +412,7 @@ mark{background:rgba(245,158,11,.25);color:inherit;border-radius:2px;padding:0 1
           <div class="form-row">
             <div class="form-group">
               <label class="form-label">Project Value ($)</label>
-              <input class="form-input" type="number" id="f-value" value="800" min="0">
+              <input class="form-input" type="number" id="f-value" value="1497" min="0">
             </div>
             <div class="form-group">
               <label class="form-label">Next Action Date</label>
@@ -938,7 +938,7 @@ function migrate(p) {
   if (!p.state) p.state = '';
   if (!p.lastActionDate) p.lastActionDate = p.updatedAt || p.createdAt;
   if (!p.nextActionDate) p.nextActionDate = '';
-  if (p.projectValue === undefined) p.projectValue = 800;
+  if (p.projectValue === undefined) p.projectValue = 1497;
   if (!p.sourceHashtag) p.sourceHashtag = '';
   if (OLD_STAGE_MAP[p.currentStage]) p.currentStage = OLD_STAGE_MAP[p.currentStage];
   if (p.channel === 'dm' && !DM_STAGES.includes(p.currentStage)) p.currentStage = 'New DM Prospect';
@@ -984,7 +984,7 @@ function addProspect(d) {
     state: d.state || '',
     lastActionDate: now,
     nextActionDate: d.nextActionDate || '',
-    projectValue: d.projectValue || 800,
+    projectValue: d.projectValue || 1497,
     sourceHashtag: '',
     createdAt: now,
     updatedAt: now
@@ -1229,10 +1229,10 @@ function renderToday() {
   const readyToContact = ps.filter(p => ['New DM Prospect','New Call Prospect'].includes(statusFor(p)));
 
   document.getElementById('today-content').innerHTML =
-    todaySection('?? Hot ? Act Now', hot, '?', 'All caught up! No hot prospects right now.') +
-    todaySection('? Follow-up Due', followUpDue, '??', 'No follow-ups due today.') +
-    todaySection('Going Cold', goingCold, '!', `No prospects going cold (threshold: ${settings.followUpHours}h).`) +
-    todaySection('Ready to Contact', readyToContact, '+', 'No new prospects waiting for outreach.');
+    todaySection('🔥 Hot – Act Now', hot, '🔥', 'All caught up! No hot prospects right now.') +
+    todaySection('⏰ Follow-up Due', followUpDue, '⏰', 'No follow-ups due today.') +
+    todaySection('❄️ Going Cold', goingCold, '❄️', `No prospects going cold (threshold: ${settings.followUpHours}h).`) +
+    todaySection('✅ Ready to Contact', readyToContact, '✅', 'No new prospects waiting for outreach.');
 }
 
 function todaySection(title, prospects, emoji, emptyMsg) {
@@ -1309,7 +1309,7 @@ function renderProspects() {
   if (ps.length === 0) {
     const allEmpty = getRaw().length === 0;
     list.innerHTML = `<div class="empty-state">
-      <span class="empty-emoji">${allEmpty ? '+' : '??'}</span>
+      <span class="empty-emoji">${allEmpty ? '📋' : '🔍'}</span>
       <div class="empty-title">${allEmpty ? 'No prospects yet' : 'No results'}</div>
       <div class="empty-desc">${allEmpty ? 'Go to Log Outreach to add your first prospect.' : 'Try adjusting your search or filters.'}</div>
       ${allEmpty ? `<button class="btn btn-primary" style="max-width:200px;margin:0 auto" onclick="navigateTo('log')">Add Prospect</button>` : ''}
@@ -1566,7 +1566,7 @@ function openEditModal(id) {
       </div>
     </div>
     <div class="form-row">
-      <div class="form-group"><label class="form-label">Project Value ($)</label><input class="form-input" type="number" id="ef-value" value="${p.projectValue||800}"></div>
+      <div class="form-group"><label class="form-label">Project Value ($)</label><input class="form-input" type="number" id="ef-value" value="${p.projectValue||1497}"></div>
       <div class="form-group"><label class="form-label">Next Action Date</label><input class="form-input" type="date" id="ef-next-action" value="${p.nextActionDate||''}"></div>
     </div>
     <input type="hidden" id="ef-id" value="${p.id}">
@@ -1589,7 +1589,7 @@ function saveEdit() {
   const fields = {
     city: document.getElementById('ef-city').value.trim(),
     state: document.getElementById('ef-state').value,
-    projectValue: parseInt(document.getElementById('ef-value').value) || 800,
+    projectValue: parseInt(document.getElementById('ef-value').value) || 1497,
     nextActionDate: document.getElementById('ef-next-action').value
   };
   if (p.channel === 'call') {
@@ -1728,12 +1728,12 @@ function handleAddProspectSubmit(e) {
     phoneNumber:document.getElementById('ac-phone').value.trim(),
     city:document.getElementById('f-city').value.trim(),
     state:document.getElementById('f-state').value,
-    projectValue:parseInt(document.getElementById('f-value').value) || 800,
+    projectValue:parseInt(document.getElementById('f-value').value) || 1497,
     nextActionDate:document.getElementById('f-next-action').value,
     initialNote:document.getElementById('f-note').value.trim()
   });
   document.getElementById('add-prospect-form').reset();
-  document.getElementById('f-value').value = '800';
+  document.getElementById('f-value').value = '1497';
   setBooking(false);
   updateDailyPills();
   refreshCurrentView();
@@ -1792,7 +1792,7 @@ function renderAnalytics() {
   const el = document.getElementById('analytics-content');
 
   if (ps.length === 0) {
-    el.innerHTML = `<div class="empty-state"><span class="empty-emoji">??</span><div class="empty-title">No data yet</div><div class="empty-desc">Add prospects to see analytics.</div></div>`;
+    el.innerHTML = `<div class="empty-state"><span class="empty-emoji">📊</span><div class="empty-title">No data yet</div><div class="empty-desc">Add prospects to see analytics.</div></div>`;
     return;
   }
 
@@ -1819,7 +1819,7 @@ function renderAnalytics() {
   const dmStageCounts = Object.fromEntries(DM_STAGES.map(s => [s,0]));
   dmPs.forEach(p => { dmStageCounts[p.currentStage] = (dmStageCounts[p.currentStage] || 0) + 1; });
 
-  function pct(n,d) { return d ? ((n/d)*100).toFixed(1)+'%' : '0.0%'; }
+  function pct(n,d) { return d ? (Math.min((n/d)*100, 100)).toFixed(1)+'%' : '0.0%'; }
   function statList(rows) {
     return `<div style="display:flex;flex-direction:column;gap:9px">${rows.map(([label,value]) => `<div class="info-row"><span class="info-label">${label}</span><span class="info-val">${value}</span></div>`).join('')}</div>`;
   }
@@ -1996,7 +1996,7 @@ function initApp() {
     });
   });
 
-  document.getElementById('f-value').value = '800';
+  document.getElementById('f-value').value = '1497';
   setAddChannel('dm');
   setOutreachChannel('dm');
   setAttemptNumber(1);
