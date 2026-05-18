@@ -1458,11 +1458,22 @@ function openQuickModal(id) {
   openModal('quick-modal');
 }
 
-function saveQuickStage() {
+async function saveQuickStage() {
   const id = document.getElementById('qm-id').value;
   const status = document.getElementById('qm-stage').value;
-  const note = document.getElementById('qm-note').value;
-  updateStatus(id, status, note);
+  const note = document.getElementById('qm-note').value.trim();
+  const p = getAll().find(x => x.id === id);
+  if (!p) return;
+  const btn = document.querySelector('#quick-modal .btn-primary');
+  btn.disabled = true;
+  btn.textContent = 'Saving…';
+  const d = p.channel === 'call'
+    ? { channel:'call', status, logType:'Other', attemptNumber:1, note, nextActionDate:'' }
+    : { channel:'dm', stage:status, logType:'Other', preEngaged:false, note, nextActionDate:'' };
+  const result = await logOutreach(id, d);
+  btn.disabled = false;
+  btn.textContent = 'Save Update';
+  if (!result) return;
   closeModal('quick-modal');
   updateDailyPills();
   const ap = document.querySelector('.page.active');
