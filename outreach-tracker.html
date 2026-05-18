@@ -940,6 +940,10 @@ function migrate(p) {
   if (!p.nextActionDate) p.nextActionDate = '';
   if (p.projectValue === undefined) p.projectValue = 1497;
   if (!p.sourceHashtag) p.sourceHashtag = '';
+  if (p.currentCallStatus === undefined) p.currentCallStatus = '';
+  if (!p.stageHistory) p.stageHistory = [];
+  if (!p.callStatusHistory) p.callStatusHistory = [];
+  if (p.followerCount === undefined || p.followerCount === null) p.followerCount = 0;
   if (OLD_STAGE_MAP[p.currentStage]) p.currentStage = OLD_STAGE_MAP[p.currentStage];
   if (p.channel === 'dm' && !DM_STAGES.includes(p.currentStage)) p.currentStage = 'New DM Prospect';
   if (p.channel === 'call' && !p.currentCallStatus) p.currentCallStatus = 'New Call Prospect';
