@@ -1006,7 +1006,7 @@ async function addProspect(d) {
   return p;
 }
 
-function updateStatus(id, status, note) {
+async function updateStatus(id, status, note) {
   const i = prospectsCache.findIndex(p => p.id === id);
   if (i < 0) return null;
   const now = new Date().toISOString();
@@ -1026,27 +1026,44 @@ function updateStatus(id, status, note) {
     }]
   };
   prospectsCache[i] = updated;
-  db.collection('prospects').doc(id).set(updated).catch(err => console.error('updateStatus:', err));
+  try {
+    await db.collection('prospects').doc(id).set(updated);
+  } catch (err) {
+    console.error('updateStatus write failed:', err);
+    prospectsCache[i] = p;
+    const msg = err.code === 'permission-denied'
+      ? 'Save failed: Firestore permission denied.\n\nFix: open Firebase Console → Firestore → Rules and ensure your rules allow writes for authenticated users.'
+      : 'Save failed: ' + err.message;
+    alert(msg);
+    return null;
+  }
   return updated;
 }
 
 function updateStage(id, stage, note) { return updateStatus(id, stage, note); }
 
-function addLogEntry(id, entry) {
+async function addLogEntry(id, entry) {
   const i = prospectsCache.findIndex(p => p.id === id);
   if (i < 0) return;
   const now = new Date().toISOString();
+  const prev = prospectsCache[i];
   const newEntry = { id:uid(), timestamp:now, ...entry };
   const updated = {
-    ...prospectsCache[i],
-    conversationLog: [...(prospectsCache[i].conversationLog||[]), newEntry],
+    ...prev,
+    conversationLog: [...(prev.conversationLog||[]), newEntry],
     updatedAt: now
   };
   prospectsCache[i] = updated;
-  db.collection('prospects').doc(id).set(updated).catch(err => console.error('addLogEntry:', err));
+  try {
+    await db.collection('prospects').doc(id).set(updated);
+  } catch (err) {
+    console.error('addLogEntry write failed:', err);
+    prospectsCache[i] = prev;
+    alert('Save failed: ' + err.message);
+  }
 }
 
-function logOutreach(id, d) {
+async function logOutreach(id, d) {
   const i = prospectsCache.findIndex(p => p.id === id);
   if (i < 0) return null;
   const now = new Date().toISOString();
@@ -1075,16 +1092,34 @@ function logOutreach(id, d) {
     updatedAt:now
   };
   prospectsCache[i] = updated;
-  db.collection('prospects').doc(id).set(updated).catch(err => console.error('logOutreach:', err));
+  try {
+    await db.collection('prospects').doc(id).set(updated);
+  } catch (err) {
+    console.error('logOutreach write failed:', err);
+    prospectsCache[i] = p;
+    refreshCurrentView();
+    const msg = err.code === 'permission-denied'
+      ? 'Save failed: Firestore permission denied.\n\nFix: open Firebase Console → Firestore → Rules and ensure your rules allow writes for authenticated users.'
+      : 'Save failed: ' + err.message;
+    alert(msg);
+    return null;
+  }
   return updated;
 }
 
-function updateFields(id, fields) {
+async function updateFields(id, fields) {
   const i = prospectsCache.findIndex(p => p.id === id);
   if (i < 0) return;
-  const updated = { ...prospectsCache[i], ...fields, updatedAt: new Date().toISOString() };
+  const prev = prospectsCache[i];
+  const updated = { ...prev, ...fields, updatedAt: new Date().toISOString() };
   prospectsCache[i] = updated;
-  db.collection('prospects').doc(id).set(updated).catch(err => console.error('updateFields:', err));
+  try {
+    await db.collection('prospects').doc(id).set(updated);
+  } catch (err) {
+    console.error('updateFields write failed:', err);
+    prospectsCache[i] = prev;
+    alert('Save failed: ' + err.message);
+  }
   return updated;
 }
 
@@ -1758,12 +1793,16 @@ async function handleAddProspectSubmit(e) {
   setTimeout(() => { btn.textContent = 'Add Prospect'; btn.style.background = ''; }, 1800);
 }
 
-function handleOutreachSubmit(e) {
+async function handleOutreachSubmit(e) {
   e.preventDefault();
   const id = document.getElementById('lo-prospect-id').value;
   if (!id) { updateOutreachMatch(); alert('No matching prospect found. Add the prospect first.'); return; }
+  const btn = document.getElementById('outreach-submit-btn');
+  btn.disabled = true;
+  btn.textContent = 'Saving…';
+  let result;
   if (outreachChannel === 'dm') {
-    logOutreach(id, {
+    result = await logOutreach(id, {
       channel:'dm',
       stage:document.getElementById('lo-dm-stage').value,
       logType:document.getElementById('lo-dm-type').value,
@@ -1771,12 +1810,14 @@ function handleOutreachSubmit(e) {
       note:document.getElementById('lo-dm-note').value.trim(),
       nextActionDate:document.getElementById('lo-dm-next-action').value
     });
-    document.getElementById('lo-dm-search').value = '';
-    document.getElementById('lo-pre-engaged').checked = false;
-    document.getElementById('lo-dm-note').value = '';
-    document.getElementById('lo-dm-next-action').value = '';
+    if (result) {
+      document.getElementById('lo-dm-search').value = '';
+      document.getElementById('lo-pre-engaged').checked = false;
+      document.getElementById('lo-dm-note').value = '';
+      document.getElementById('lo-dm-next-action').value = '';
+    }
   } else {
-    logOutreach(id, {
+    result = await logOutreach(id, {
       channel:'call',
       status:document.getElementById('lo-call-status').value,
       logType:document.getElementById('lo-call-type').value,
@@ -1784,16 +1825,19 @@ function handleOutreachSubmit(e) {
       note:document.getElementById('lo-call-note').value.trim(),
       nextActionDate:document.getElementById('lo-call-next-action').value
     });
-    document.getElementById('lo-call-search').value = '';
-    document.getElementById('lo-call-note').value = '';
-    document.getElementById('lo-call-next-action').value = '';
-    setAttemptNumber(1);
+    if (result) {
+      document.getElementById('lo-call-search').value = '';
+      document.getElementById('lo-call-note').value = '';
+      document.getElementById('lo-call-next-action').value = '';
+      setAttemptNumber(1);
+    }
   }
+  btn.disabled = false;
+  if (!result) { btn.textContent = 'Log Outreach'; return; }
   document.getElementById('lo-prospect-id').value = '';
   updateOutreachMatch();
   updateDailyPills();
   refreshCurrentView();
-  const btn = document.getElementById('outreach-submit-btn');
   btn.textContent = 'Outreach Logged!';
   btn.style.background = 'var(--success)';
   setTimeout(() => { btn.textContent = 'Log Outreach'; btn.style.background = ''; }, 1800);
